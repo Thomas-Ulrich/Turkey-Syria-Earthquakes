@@ -1,0 +1,58 @@
+!EvalModel
+parameters: [Omega, sig_zz, b_xx, b_yy, b_zz, b_xy, b_yz, b_xz]
+model: !Switch
+  [Omega]: !LuaMap
+        returns: [Omega]
+        function: |
+         function f (x)
+           zStressDecreaseStart = -14000.;
+           zStressDecreaseStop = -18000.;
+           zStressDecreaseWidth = zStressDecreaseStart - zStressDecreaseStop;
+           if (x["z"] >= zStressDecreaseStart) then
+              Omega = 1.0
+           elseif (x["z"] >= zStressDecreaseStop) then
+              a = 1.0-(x["z"]-zStressDecreaseStop)/zStressDecreaseWidth;
+              Sx = (3.0*a*a-2.0*a*a*a);
+              Omega = 1.0-0.99*Sx;
+           else
+              Omega = 0.01;
+           end
+           return {
+             Omega = Omega
+           }
+           end
+  [b_xx, b_yy, b_zz, b_xy, b_yz, b_xz]: !EvalModel
+    parameters: [sig_zz,S]
+    model: !Switch
+      [sig_zz]: !Include Mw_78_Turkey_sig_zz.yaml
+      [S]: !LuaMap
+        returns: [S]
+        function: |
+         function f (x)
+          R = 0.8
+          return {
+            S = (1.0/R-1.0)
+          }
+          end
+    components: !AndersonianStress
+      constants:
+        mu_d:      0.2
+        mu_s:      0.6
+        SH_max:    0.0
+        cohesion:  0.0
+        s2ratio:   0.5
+        S_v: 2
+  [sig_zz]: !Include Mw_78_Turkey_sig_zz.yaml
+components: !LuaMap
+  returns: [s_xx, s_yy, s_zz, s_xy, s_yz, s_xz]
+  function: |
+     function f (x)
+      return {
+        s_xx = x["Omega"] * x["b_xx"] + (1.0-x["Omega"]) * x["sig_zz"],
+        s_yy = x["Omega"] * x["b_yy"] + (1.0-x["Omega"]) * x["sig_zz"],
+        s_zz = x["Omega"] * x["b_zz"] + (1.0-x["Omega"]) * x["sig_zz"],
+        s_xy = x["Omega"] * x["b_xy"],
+        s_yz = x["Omega"] * x["b_yz"],
+        s_xz = x["Omega"] * x["b_xz"]
+      }
+      end

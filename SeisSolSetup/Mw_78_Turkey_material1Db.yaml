@@ -1,0 +1,18 @@
+!Switch
+[rho, mu, lambda]:  !Include Mw_78_Turkey_rhomulambda1D.yaml
+[bulkFriction]: !ConstantMap
+  map:
+    bulkFriction: 0.6
+[plastCo]: !EvalModel
+  parameters: [mu]
+  model: !Switch
+    [mu]: !Include Mw_78_Turkey_rhomulambda1D.yaml
+  component: !LuaMap
+          returns: [plastCo]
+          function: |
+           function f (x)
+             return {
+               plastCo = 0.0001 * x['mu']
+             }
+             end
+[s_xx, s_yy, s_zz, s_xy, s_yz, s_xz]: !Include Mw_78_Turkey_initial_stress.yaml
