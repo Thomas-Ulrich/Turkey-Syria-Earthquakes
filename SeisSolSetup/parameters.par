@@ -80,7 +80,7 @@ LtsWiggleFactorEnforceMaximumDifference = 1 ! 0 or 1: Enforces the maximum diffe
 
 &Output
 FaultOutputFlag = 1                            ! DR output (add this line only if DR is active)
-OutputFile = 'output/SHmax_0_30MPa'
+OutputFile = 'output/SHmax_0_30MPa_R06'
 Format = 6                                    ! Format (10= no output, 6=hdf5 output)
 !             |stress     |vel  
 iOutputMask = 0 0 0 0 0 0 1 1 1 
@@ -119,7 +119,7 @@ EnergyOutputInterval = 0.2
 /
 
 &AbortCriteria
-EndTime = 75.0
+EndTime = 100.0
 !EndTime = 40.0
 /
 

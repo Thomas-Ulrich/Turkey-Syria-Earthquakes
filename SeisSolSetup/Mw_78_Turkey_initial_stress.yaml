@@ -37,15 +37,30 @@ model: !Switch
               components: !ConstantMap
                 map:
                   SH_max: -15.0
-      [S]: !LuaMap
-        returns: [S]
-        function: |
-         function f (x)
-          R = 0.75
-          return {
-            S = (1.0/R-1.0)
-          }
-          end
+      [S]: !Any
+          components:
+            - !GroupFilter
+              groups: [66,67,68]
+              components: !LuaMap
+                returns: [S]
+                function: |
+                 function f (x)
+                  R = 0.6
+                  return {
+                    S = (1.0/R-1.0)
+                  }
+                  end
+            - !GroupFilter
+              groups: [65]
+              components: !LuaMap
+                returns: [S]
+                function: |
+                 function f (x)
+                  R = 0.75
+                  return {
+                    S = (1.0/R-1.0)
+                  }
+                  end
     components: !AndersonianStress
       constants:
         mu_d:      0.2
