@@ -26,7 +26,7 @@ ModelFileName = 'Mw_78_Turkey_fault.yaml'
 
 
 !non spatially dependent fault parameters
-t_0 = 0.25
+t_0 = 0.35
 
 !reference vector for defining strike and dip direction
 XRef = -0.1                                    ! Reference point
@@ -64,7 +64,7 @@ PPFileName = 'fault_receiver.dat'
 /
             
 &MeshNml
-MeshFile = 'mesh/Turkey78_withfaults_1'
+MeshFile = 'mesh/Turkey78_withfaults_seg_1'
 meshgenerator = 'PUML'                         ! Name of meshgenerator (Gambit3D-fast, Netcdf or PUML)
 /
 
@@ -119,8 +119,8 @@ EnergyOutputInterval = 0.2
 /
 
 &AbortCriteria
-!EndTime = 75.0
-EndTime = 40.0
+EndTime = 75.0
+!EndTime = 40.0
 /
 
 &Analysis

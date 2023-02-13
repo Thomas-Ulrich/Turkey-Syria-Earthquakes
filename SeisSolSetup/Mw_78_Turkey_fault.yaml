@@ -3,17 +3,18 @@
   map:
     mu_s: 0.6
     mu_d: 0.2
-    d_c: 0.2
+    d_c: 0.4
     forced_rupture_time: 1e10
 [cohesion]: !Any
   components:
     - !GroupFilter
-      groups: 3
+      #for the moment this is not needed any more
+      groups: [-1]
       components: !ConstantMap
         map:
           cohesion: -1.0e6
     - !GroupFilter
-      groups: 65
+      groups: [65,66,67,68]
       # + 2.0MPa 6km for SHmax -5 and 0
       components: !LuaMap
         returns: [cohesion]
@@ -23,7 +24,7 @@
           cohesion = -10.0^6
           zIncreasingCohesion = 6000.0
           if (z >= -zIncreasingCohesion) then
-            cohesion = cohesion - 00.0^5 * (z+zIncreasingCohesion)/zIncreasingCohesion;
+            cohesion = cohesion - 10.0^5 * (z+zIncreasingCohesion)/zIncreasingCohesion;
           end
           return {
             cohesion = cohesion

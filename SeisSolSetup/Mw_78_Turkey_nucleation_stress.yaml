@@ -6,10 +6,10 @@
   function: |
      function f (x)
       ShapeNucleation = 0.0
-      xh =  6536.7995192
-      yh = 17702.65686703
-      zh = -12000
-      r_crit = 1800.0
+      xh = 10044.85980018 
+      yh = 31902.34536511 
+      zh = -8599.9996261
+      r_crit = 2700.0
       r = math.sqrt((x["x"]-xh)^2 + (x["y"]-yh)^2 + (x["z"]-zh)^2 )
       if (r < r_crit) then
         ShapeNucleation =  math.exp(r^2/(r^2-r_crit^2))
