@@ -6,7 +6,7 @@
 [plastCo]: !EvalModel
   parameters: [mu]
   model: !Switch
-    [rho, mu, lambda]: !Include Mw_78_Turkey_rhomulambda1D.yaml
+    [rho, mu, lambda]: !Include Mw_78_Turkey_rhomulambda1D_Guvercin_et_al.yaml
   component: !LuaMap
     returns: [plastCo]
     function: |
