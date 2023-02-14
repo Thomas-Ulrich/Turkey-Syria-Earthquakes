@@ -25,7 +25,7 @@ k0=0
 
 for k in 4 10 20 28 40 60 80
 do
-    python ~/TuSeisSolScripts/displayh5vtk/displayUnstructuredVtk.py $1-fault.xdmf --Data SR --pvcc SEviewTurkey_flatter.pvcc --at_time $k --BoundaryEdges --zoom 3.5 --crange 0 4 --colorScale viridis_r0.xml --winSize 1600 450  --OSR --oneDtMem --output trash_me 
+    python ~/TuSeisSolScripts/displayh5vtk/displayUnstructuredVtk.py $1-fault.xdmf --Data SR --pvcc pvcc/SEviewTurkey_flatter.pvcc --at_time $k --BoundaryEdges --zoom 3.5 --crange 0 4 --colorScale viridis_r0.xml --winSize 1600 450  --OSR --oneDtMem --output trash_me 
    calcgxgy
    convert output/trash_me.png -transparent white output/trash_me.png
    convert $outFile output/trash_me.png -geometry +$gx+$gy -composite $outFile

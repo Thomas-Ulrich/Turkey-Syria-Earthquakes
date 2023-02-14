@@ -12,7 +12,7 @@ def computeMw(label, time, moment_rate):
     print(f"{label} moment magnitude: {Mw} (M0 = {M0:.4e})")
 
 
-ps = 20
+ps = 8
 matplotlib.rcParams.update({"font.size": ps})
 plt.rcParams["font.family"] = "sans"
 matplotlib.rc("xtick", labelsize=ps)
@@ -29,7 +29,7 @@ args = parser.parse_args()
 if args.labels:
     assert len(args.prefix_paths) == len(args.labels)
 
-fig = plt.figure(figsize=(16, 6), dpi=80)
+fig = plt.figure(figsize=(3.3, 3.3 * 6 / 16), dpi=80)
 ax = fig.add_subplot(111)
 cols = ["k", "r", "g", "b", "y"]
 
@@ -38,7 +38,13 @@ for i, prefix_path in enumerate(args.prefix_paths):
     df = df.pivot_table(index="time", columns="variable", values="measurement")
     df["seismic_moment_rate"] = np.gradient(df["seismic_moment"], df.index[1])
     label = args.labels[i] if args.labels else os.path.basename(prefix_path)
-    plt.plot(df.index.values, df["seismic_moment_rate"] / 1e19, cols[i], label=label)
+    plt.plot(
+        df.index.values,
+        df["seismic_moment_rate"] / 1e19,
+        cols[i],
+        label=label,
+        linewidth=0.5,
+    )
     computeMw(label, df.index.values, df["seismic_moment_rate"])
 
 plt.legend(frameon=False)
@@ -53,6 +59,6 @@ ax.get_yaxis().tick_left()
 ax.set_ylabel(r"moment rate (e19 $\times$ Nm/s)")
 ax.set_xlabel("time (s)")
 
-fn = "output/moment_rate.png"
+fn = "output/moment_rate.svg"
 plt.savefig(fn, bbox_inches="tight")
 print(f"done write {fn}")
