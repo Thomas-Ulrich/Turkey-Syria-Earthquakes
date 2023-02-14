@@ -53,6 +53,6 @@ ax.get_yaxis().tick_left()
 ax.set_ylabel(r"moment rate (e19 $\times$ Nm/s)")
 ax.set_xlabel("time (s)")
 
-fn = "plots/moment_rate.png"
-plt.savefig("plots/moment_rate.png", bbox_inches="tight")
+fn = "output/moment_rate.png"
+plt.savefig(fn, bbox_inches="tight")
 print(f"done write {fn}")
