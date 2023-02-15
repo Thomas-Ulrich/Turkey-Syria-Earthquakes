@@ -80,7 +80,7 @@ LtsWiggleFactorEnforceMaximumDifference = 1 ! 0 or 1: Enforces the maximum diffe
 
 &Output
 FaultOutputFlag = 1                            ! DR output (add this line only if DR is active)
-OutputFile = 'output/SHmax_0_30MPa_R06'
+OutputFile = 'output/SHmax_0_30MPa_R06_newVel'
 Format = 6                                    ! Format (10= no output, 6=hdf5 output)
 !             |stress     |vel  
 iOutputMask = 0 0 0 0 0 0 1 1 1 
@@ -90,9 +90,8 @@ TimeInterval = 5.00                             ! Index of printed info at time
 refinement = 0
 
 ! off-fault ascii receivers
-!nRecordPoints = 33                             ! number of Record points which are read from file
-!RFileName = 'GPSfiltered_proj_200m_8e6.dat'    ! Record Points in extra file
-pickdt = 0.01                                  ! Pickpoint Sampling
+RFileName = 'Turkey78_withfaults_seg_1_stations_proj.txt'    ! Record Points in extra file
+pickdt = 0.02                                  ! Pickpoint Sampling
 pickDtType = 1                                 ! Pickpoint Type
 ! (Optional) Synchronization point for receivers.
 !            If omitted, receivers are written at the end of the simulation.
