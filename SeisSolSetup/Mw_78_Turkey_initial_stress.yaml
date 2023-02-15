@@ -45,7 +45,7 @@ model: !Switch
                 returns: [S]
                 function: |
                  function f (x)
-                  R = 0.6
+                  R = 0.5
                   return {
                     S = (1.0/R-1.0)
                   }
@@ -56,7 +56,7 @@ model: !Switch
                 returns: [S]
                 function: |
                  function f (x)
-                  R = 0.75
+                  R = 0.65
                   return {
                     S = (1.0/R-1.0)
                   }
