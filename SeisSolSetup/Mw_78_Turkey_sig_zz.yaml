@@ -4,6 +4,6 @@
   function: |
      function f (x)
       return {
-        sig_zz = math.max(-30000000, 2670.0*0.63*9.8*math.min(-10.0,x["z"]))
+        sig_zz = math.max(-30000000, 2670.0*0.63*9.8*math.min(-200.0,x["z"]))
       }
       end
