@@ -38,6 +38,7 @@ model: !Switch
                 map:
                   SH_max: -15.0
       [S]: !Any
+          #0.55, 0.7 to get rupture jumping
           components:
             - !GroupFilter
               groups: [66,67,68]
@@ -45,7 +46,9 @@ model: !Switch
                 returns: [S]
                 function: |
                  function f (x)
-                  R = 0.5
+                  -- R = 0.575
+                  -- R = 0.5 very delayed rupture, 0.65
+                  R = 0.55
                   return {
                     S = (1.0/R-1.0)
                   }
@@ -56,6 +59,7 @@ model: !Switch
                 returns: [S]
                 function: |
                  function f (x)
+                  -- R = 0.75
                   R = 0.65
                   return {
                     S = (1.0/R-1.0)

@@ -9,6 +9,7 @@
       xh = 10044.85980018 
       yh = 31902.34536511 
       zh = -8599.9996261
+      -- r_crit = 1400.0
       r_crit = 2700.0
       r = math.sqrt((x["x"]-xh)^2 + (x["y"]-yh)^2 + (x["z"]-zh)^2 )
       if (r < r_crit) then
@@ -17,6 +18,6 @@
       return {
         Tnuc_n = 0.0,
         Tnuc_d = 0.0,
-        Tnuc_s = -ShapeNucleation*30*math.pow(10,6)
+        Tnuc_s = -ShapeNucleation*12*math.pow(10,6)
       }
       end
