@@ -29,12 +29,14 @@ ax = []
 ax.append(fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree()))
 SetupMap(ax[0])
 
+
 stations2plot = [
-    "0214",
-    "0208",
+    "0215",
+    "0213",
     "4611",
     "4632",
     "4611",
+    "4615",
     "4625",
     "4616",
     "2718",
@@ -46,7 +48,7 @@ stations2plot = [
 
 
 for fault in ["main_fault_segmented", "fault_near_hypo"]:
-    fn = f"/home/ulrich/work/Mw_78_Turkey/{fault}.shp"
+    fn = f"../geometry/{fault}.shp"
     sf = shp.Reader(fn)
     for sr in sf.shapeRecords():
         listx = []
@@ -57,11 +59,13 @@ for fault in ["main_fault_segmented", "fault_near_hypo"]:
         plt.plot(listx, listy, "k")
 
 
-fn = "/home/ulrich/work/Mw_78_Turkey/Turkey-Syria-Earthquakes/ThirdParty/stations.csv"
+fn = "../ThirdParty/stations.csv"
 cols = ["Code", "Longitude", "Latitude"]
 df = pd.read_csv(fn)
 
-for index, row in df.iterrows():
+df["waveform_to_plot"] = [row["Code"] in stations2plot for index, row in df.iterrows()]
+df_no = df.loc[df["waveform_to_plot"] == False]
+for index, row in df_no.iterrows():
     is_inside = (35.5 <= row["Longitude"] <= 39.5) and (35.8 <= row["Latitude"] <= 38.2)
     c = "b" if row["Code"] in stations2plot else "k"
     if row["DeviceCode"] == "N" and is_inside:
@@ -72,11 +76,10 @@ for index, row in df.iterrows():
             facecolors="none",
             edgecolors=c,
         )
-        plt.text(row["Longitude"] + 0.002, row["Latitude"], row["Code"], size=8)
+        # plt.text(row["Longitude"] + 0.002, row["Latitude"], row["Code"], size=8)
 
-df["waveform_to_plot"] = [row["Code"] in stations2plot for index, row in df.iterrows()]
-df = df.loc[df["waveform_to_plot"]]
-for index, row in df.iterrows():
+df_yes = df.loc[df["waveform_to_plot"]]
+for index, row in df_yes.iterrows():
     is_inside = (35.5 <= row["Longitude"] <= 39.5) and (35.8 <= row["Latitude"] <= 38.2)
     if row["DeviceCode"] == "N" and is_inside:
         plt.scatter(
@@ -87,5 +90,6 @@ for index, row in df.iterrows():
             edgecolors="b",
         )
         plt.text(
-            row["Longitude"] + 0.002, row["Latitude"], row["Code"], size=8, color="b"
+            row["Longitude"] + 0.04, row["Latitude"], row["Code"], size=8, color="b"
         )
+plt.show()
