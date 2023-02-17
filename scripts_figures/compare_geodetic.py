@@ -51,8 +51,21 @@ def tree_query(arguments):
     return index
 
 
+def read_optical_cc_data_one_band(fn):
+    with rasterio.open(fn) as src:
+        ew = src.read(1)
+        print("band 1 has shape", ew.shape)
+        ds = args.downsampling[0]
+        height, width = ew.shape
+        cols, rows = np.meshgrid(np.arange(width), np.arange(height))
+        lon_g, lat_g = rasterio.transform.xy(src.transform, rows, cols)
+        lon_g = np.array(lon_g)[::ds, ::ds]
+        lat_g = np.array(lat_g)[::ds, ::ds]
+        ew = ew[::ds, ::ds]
+        return lon_g, lat_g, ew
+
+
 def read_optical_cc_data(fn):
-    file_name = "../ThirdParty/mosaic_turkey_wgs84.tif"
     with rasterio.open(fn) as src:
         ew = src.read(1)
         ns = src.read(2)
@@ -154,30 +167,9 @@ def project_seissol_data_to_structured_grid(
 def generate_quiver_plot(lon_g, lat_g, ew, ns, ax):
     """plot the optical displacement data and synthetics with arrows"""
     nDownSample = 25
-    scale = 80
+    scale = 70
     xg = lon_g[::nDownSample, ::nDownSample]
     yg = lat_g[::nDownSample, ::nDownSample]
-
-    import cv2
-
-    print("applying a median blur on data")
-    ew = cv2.medianBlur(ew, 5)
-    ns = cv2.medianBlur(ns, 5)
-    datae = ew[::nDownSample, ::nDownSample]
-    datan = ns[::nDownSample, ::nDownSample]
-
-    ax.quiver(
-        xg,
-        yg,
-        datae,
-        datan,
-        scale=scale,
-        angles="xy",
-        units="width",
-        color="k",
-        width=0.002,
-        zorder=1,
-    )
 
     if args.surface:
 
@@ -199,6 +191,42 @@ def generate_quiver_plot(lon_g, lat_g, ew, ns, ax):
             width=0.002,
             zorder=1,
         )
+    import cv2
+
+    print("applying a median blur on data")
+    ew = cv2.medianBlur(ew, 5)
+    ns = cv2.medianBlur(ns, 5)
+    datae = ew[::nDownSample, ::nDownSample]
+    datan = ns[::nDownSample, ::nDownSample]
+
+    ax.quiver(
+        xg,
+        yg,
+        datae,
+        datan,
+        scale=scale,
+        angles="xy",
+        units="width",
+        color="k",
+        width=0.002,
+        zorder=1,
+    )
+    """
+    import pandas as pd
+    df = pd.read_csv('../ThirdParty/coseismic_offsets.txt')
+    ax.quiver(
+        df['Lon'].to_numpy(),
+        df['Lat'].to_numpy(),
+        df['de(m)'].to_numpy(),
+        df['dn(m)'].to_numpy(),
+        scale=scale,
+        angles="xy",
+        units="width",
+        color="r",
+        width=0.002,
+        zorder=1,
+    )
+    """
 
 
 parser = argparse.ArgumentParser(description="compare displacement with geodetics")
@@ -240,8 +268,16 @@ ax = []
 ax.append(fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree()))
 setup_map(ax[0])
 
-fn = "../ThirdParty/mosaic_turkey_wgs84.tif"
-lon_g, lat_g, ew, ns = read_optical_cc_data(fn)
+if True:
+    # Mathilde newest cc results
+    fn = "../ThirdParty/Turquie_detrended_EW_NLM_destripe_wgs84.tif"
+    lon_g, lat_g, ew = read_optical_cc_data_one_band(fn)
+    fn = "../ThirdParty/Turquie_detrended_NS_NLM_destripe_wgs84.tif"
+    lon_g, lat_g, ns = read_optical_cc_data_one_band(fn)
+else:
+    # Mathilde initial cc results
+    fn = "../ThirdParty/mosaic_turkey_wgs84.tif"
+    lon_g, lat_g, ew, ns = read_optical_cc_data(fn)
 
 vmax = 4
 vmin = -vmax
@@ -297,6 +333,6 @@ fig.colorbar(c, ax=ax[-1], cax=cbaxes)
 
 
 plt.title(args.band[0])
-plt.savefig(f"comparison_sentinel2{args.band[0]}.pdf")
+plt.savefig(f"comparison_sentinel2{args.band[0]}.png")
 
 plt.show()
