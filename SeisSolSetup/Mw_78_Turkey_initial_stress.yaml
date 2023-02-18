@@ -28,20 +28,25 @@ model: !Switch
       [SH_max]: !Any
           components:
             - !GroupFilter
-              groups: [67,68]
+              groups: [67,68,69]
               components: !ConstantMap
                 map:
                   SH_max: 25.0
             - !GroupFilter
-              groups: [65,66]
+              groups: [65,70]
               components: !ConstantMap
                 map:
                   SH_max: -15.0
+            - !GroupFilter
+              groups: [66]
+              components: !ConstantMap
+                map:
+                  SH_max: -20.0
       [S]: !Any
           #0.55, 0.7 to get rupture jumping
           components:
             - !GroupFilter
-              groups: [66,67,68]
+              groups: [66,67,68,69,70]
               components: !LuaMap
                 returns: [S]
                 function: |
@@ -61,6 +66,7 @@ model: !Switch
                  function f (x)
                   -- R = 0.75
                   R = 0.65
+                  -- R = 0.6 and SHmax -10 also works
                   return {
                     S = (1.0/R-1.0)
                   }
