@@ -14,6 +14,7 @@ from scipy import spatial
 from multiprocessing import Pool, cpu_count, Manager
 from pyproj import Transformer
 from cmcrameri import cm
+from scipy.interpolate import RegularGridInterpolator
 
 
 def setup_map(ax, gridlines_left=True):
@@ -51,7 +52,7 @@ def tree_query(arguments):
     return index
 
 
-def read_optical_cc_data_one_band(fn):
+def read_observation_data_one_band(fn):
     with rasterio.open(fn) as src:
         ew = src.read(1)
         print("band 1 has shape", ew.shape)
@@ -81,6 +82,30 @@ def read_optical_cc_data(fn):
     return lon_g, lat_g, ew, ns
 
 
+def compute_LOS_displacement_SeisSol_data(
+    lon_g, lat_g, theta_g, phi_g, lonlat_barycenter, band
+):
+    # interpolate satellite angles on the unstructured grid
+    f = RegularGridInterpolator(
+        (lon_g[0, :], lat_g[:, 0]), theta_g.T, bounds_error=False, fill_value=np.nan
+    )
+    theta_inter = f(lonlat_barycenter)
+    g = RegularGridInterpolator(
+        (lon_g[0, :], lat_g[:, 0]), phi_g.T, bounds_error=False, fill_value=np.nan
+    )
+    phi_inter = g(lonlat_barycenter)
+    # compute displacement line of sight
+    # phi azimuth, theta: range
+    if band == "azimuth":
+        D_los = U * np.sin(phi_inter) + V * np.cos(phi_inter)
+    else:
+        D_los = W * np.cos(theta_inter) + np.sin(theta_inter) * (
+            U * -np.cos(phi_inter) + V * np.sin(phi_inter)
+        )
+        # D_los = W * np.sin(theta_inter) + np.cos(theta_inter) * (U * np.cos(phi_inter) + V * np.sin(phi_inter))
+    return -D_los
+
+
 def read_seissol_surface_data(xdmfFilename):
     """read unstructured free surface output and associated data.
     compute cell_barycenter"""
@@ -89,6 +114,7 @@ def read_seissol_surface_data(xdmfFilename):
     connect = sx.ReadConnect()
     U = sx.ReadData("u1", sx.ndt - 1)
     V = sx.ReadData("u2", sx.ndt - 1)
+    W = sx.ReadData("u3", sx.ndt - 1)
 
     # project the data to geocentric (lat, lon)
 
@@ -102,7 +128,7 @@ def read_seissol_surface_data(xdmfFilename):
         xy[connect[:, 0], :] + xy[connect[:, 1], :] + xy[connect[:, 2], :]
     ) / 3.0
 
-    return lons, lats, lonlat_barycenter, connect, U, V
+    return lons, lats, lonlat_barycenter, connect, U, V, W
 
 
 def project_seissol_data_to_structured_grid(
@@ -241,7 +267,13 @@ parser.add_argument("--surface", nargs=1, help="SeisSol xdmf surface file")
 parser.add_argument(
     "--extension", nargs=1, default=(["png"]), help="extension output file"
 )
-parser.add_argument("--band", nargs=1, default=(["EW"]), help="EW or NS")
+parser.add_argument(
+    "--band",
+    nargs=1,
+    default=(["EW"]),
+    help="EW, NS, azimuth or range",
+    choices=["EW", "NS", "azimuth", "range"],
+)
 parser.add_argument(
     "--noVector",
     dest="noVector",
@@ -268,16 +300,22 @@ ax = []
 ax.append(fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree()))
 setup_map(ax[0])
 
-if True:
+if args.band[0] in ["EW", "NS"]:
     # Mathilde newest cc results
     fn = "../ThirdParty/Turquie_detrended_EW_NLM_destripe_wgs84.tif"
-    lon_g, lat_g, ew = read_optical_cc_data_one_band(fn)
+    lon_g, lat_g, ew = read_observation_data_one_band(fn)
     fn = "../ThirdParty/Turquie_detrended_NS_NLM_destripe_wgs84.tif"
-    lon_g, lat_g, ns = read_optical_cc_data_one_band(fn)
-else:
+    lon_g, lat_g, ns = read_observation_data_one_band(fn)
+    obs_to_plot = ew if args.band[0] == "EW" else ns
+elif args.band[0] in ["azimuth", "range"]:
     # Mathilde initial cc results
-    fn = "../ThirdParty/mosaic_turkey_wgs84.tif"
-    lon_g, lat_g, ew, ns = read_optical_cc_data(fn)
+    fn = f"../ThirdParty/Displacement_TUR_20230114_20230207_1529_Data/20230114_HH_20230207_HH.spo_{args.band[0]}.filtered.geo.tif"
+    lon_g, lat_g, obsLOS = read_observation_data_one_band(fn)
+    obs_to_plot = obsLOS
+    fn = "../ThirdParty/Displacement_TUR_20230114_20230207_1529_Data/20230114_HH_lv_phi.geo.tif"
+    lon_g, lat_g, phi_g = read_observation_data_one_band(fn)
+    fn = "../ThirdParty/Displacement_TUR_20230114_20230207_1529_Data/20230114_HH_lv_theta.geo.tif"
+    lon_g, lat_g, theta_g = read_observation_data_one_band(fn)
 
 vmax = 4
 vmin = -vmax
@@ -285,30 +323,36 @@ vmin = -vmax
 c = ax[0].pcolormesh(
     lon_g,
     lat_g,
-    ew if args.band[0] == "EW" else ns,
+    obs_to_plot,
     cmap=cm.vik,
     rasterized=True,
     vmin=vmin,
     vmax=vmax,
 )
 
-
 if args.surface:
-    lons, lats, lonlat_barycenter, connect, U, V = read_seissol_surface_data(
+    lons, lats, lonlat_barycenter, connect, U, V, W = read_seissol_surface_data(
         args.surface[0]
     )
     # this is an inset axes over the main axes
     ax.append(ax[0].inset_axes([0.45, 0.01, 0.54, 0.54], projection=ccrs.PlateCarree()))
-
     setup_map(ax[1], gridlines_left=False)
-    toplot = U if args.band[0] == "EW" else V
+
+    if args.band[0] == "EW":
+        syn_to_plot = U
+    elif args.band[0] == "NS":
+        syn_to_plot = V
+    elif args.band[0] in ["azimuth", "range"]:
+        syn_to_plot = compute_LOS_displacement_SeisSol_data(
+            lon_g, lat_g, theta_g, phi_g, lonlat_barycenter, args.band[0]
+        )
+
     if args.diff:
         # interpolate satellite displacement on the unstructured grid
-        from scipy.interpolate import RegularGridInterpolator
 
         f = RegularGridInterpolator(
             (lon_g[0, :], lat_g[:, 0]),
-            ew.T if args.band[0] == "EW" else ns.T,
+            obs_to_plot.T,
             bounds_error=False,
             fill_value=np.nan,
         )
@@ -317,14 +361,14 @@ if args.surface:
         lons,
         lats,
         connect,
-        facecolors=toplot - f(lonlat_barycenter) if args.diff else toplot,
+        facecolors=syn_to_plot - f(lonlat_barycenter) if args.diff else syn_to_plot,
         cmap=cm.vik,
         rasterized=True,
         vmin=-vmax,
         vmax=vmax,
     )
 
-if not args.noVector:
+if not args.noVector and args.band[0] in ["EW", "NS"]:
     generate_quiver_plot(lon_g, lat_g, ew, ns, ax[0])
 # Add colorbar
 # left, bottom, width, height
@@ -333,6 +377,7 @@ fig.colorbar(c, ax=ax[-1], cax=cbaxes)
 
 
 plt.title(args.band[0])
-plt.savefig(f"comparison_sentinel2{args.band[0]}.png")
-
-plt.show()
+fn = f"comparison_geodetic_{args.band[0]}.png"
+plt.savefig(fn, dpi=200)
+print(f"done writing {fn}")
+# plt.show()
