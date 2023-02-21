@@ -3,6 +3,6 @@
   function: |
      function f (x)
       return {
-        sig_zz = math.max(-45000000, 2670.0*0.3*9.8*math.min(-200.0,x["z"]))
+        sig_zz = 1.2*math.max(-45000000, 2670.0*0.3*9.8*math.min(-200.0,x["z"]))
       }
       end

@@ -1,23 +1,20 @@
 !Switch
-#Tnuc_s = -ShapeNucleation*10*math.pow(10,6) SHmax -10
-#Tnuc_s = -ShapeNucleation*30*math.pow(10,6) SHmax 0 (~25)
 [Tnuc_n,Tnuc_s,Tnuc_d]: !LuaMap
   returns: [Tnuc_n,Tnuc_s,Tnuc_d]
   function: |
      function f (x)
       ShapeNucleation = 0.0
-      xh = 10044.85980018 
-      yh = 31902.34536511 
-      zh = -8599.9996261
-      -- r_crit = 1400.0
-      r_crit = 2700.0
+      xh = 9199.57641228 
+      yh = 29894.97015349 
+      zh = -8600.
+      r_crit = 1400.0
       r = math.sqrt((x["x"]-xh)^2 + (x["y"]-yh)^2 + (x["z"]-zh)^2 )
       if (r < r_crit) then
         ShapeNucleation =  math.exp(r^2/(r^2-r_crit^2))
       end
       return {
         Tnuc_n = 0.0,
-        Tnuc_d = 0.0,
-        Tnuc_s = -ShapeNucleation*12*math.pow(10,6)
+        Tnuc_d = 0*ShapeNucleation*4*math.pow(10,6),
+        Tnuc_s = -12.0*ShapeNucleation*math.pow(10,6)
       }
       end

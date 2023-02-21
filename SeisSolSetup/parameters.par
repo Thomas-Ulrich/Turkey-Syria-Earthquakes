@@ -2,7 +2,7 @@
 !yaml file defining spatial dependance of material properties
 MaterialFileName = 'Mw_78_Turkey_material1D.yaml'
 !off-fault plasticity parameter (ignored in Plasticity=0)
-Plasticity=0
+Plasticity=1
 Tv=0.05
 !Attenuation parameters (ignored if not compiled with attenuation)
 FreqCentral=0.5
@@ -64,7 +64,7 @@ PPFileName = 'fault_receiver.dat'
 /
             
 &MeshNml
-MeshFile = 'mesh/Turkey78_withfaults_seg_1'
+MeshFile = 'mesh/Turkey78_withfaults_seg_usgs_with75_1'
 meshgenerator = 'PUML'                         ! Name of meshgenerator (Gambit3D-fast, Netcdf or PUML)
 /
 
@@ -80,7 +80,7 @@ LtsWiggleFactorEnforceMaximumDifference = 1 ! 0 or 1: Enforces the maximum diffe
 
 &Output
 FaultOutputFlag = 1                            ! DR output (add this line only if DR is active)
-OutputFile = 'output/SHmax_0_45MPa_R05'
+OutputFile = 'output/Turkey78_segmented_usgs_with75'
 Format = 6                                    ! Format (10= no output, 6=hdf5 output)
 !             |stress     |vel  
 iOutputMask = 0 0 0 0 0 0 1 1 1 
@@ -90,7 +90,7 @@ TimeInterval = 5.00                             ! Index of printed info at time
 refinement = 0
 
 ! off-fault ascii receivers
-!RFileName = 'Turkey78_withfaults_seg_1_stations_proj.txt'    ! Record Points in extra file
+RFileName = 'Turkey78_withfaults_seg_usgs_with75_1_stations_proj.txt'    ! Record Points in extra file
 pickdt = 0.02                                  ! Pickpoint Sampling
 pickDtType = 1                                 ! Pickpoint Type
 ! (Optional) Synchronization point for receivers.
