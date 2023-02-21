@@ -5,30 +5,19 @@
     mu_d: 0.2
     d_c: 0.4
     forced_rupture_time: 1e10
-[cohesion]: !Any
-  components:
-    - !GroupFilter
-      #for the moment this is not needed any more
-      groups: [-1]
-      components: !ConstantMap
-        map:
-          cohesion: -1.0e6
-    - !GroupFilter
-      groups: [65,66,67,68]
-      # + 2.0MPa 6km for SHmax -5 and 0
-      components: !LuaMap
-        returns: [cohesion]
-        function: |
-         function f (x)
-          z = x["z"]
-          cohesion = -10.0^6
-          zIncreasingCohesion = 6000.0
-          if (z >= -zIncreasingCohesion) then
-            cohesion = cohesion - 10.0^5 * (z+zIncreasingCohesion)/zIncreasingCohesion;
-          end
-          return {
-            cohesion = cohesion
-          }
-          end
+[cohesion]: !LuaMap
+  returns: [cohesion]
+  function: |
+   function f (x)
+    z = x["z"]
+    cohesion = -10.0^6
+    zIncreasingCohesion = 6000.0
+    if (z >= -zIncreasingCohesion) then
+      cohesion = cohesion - 10.0^5 * (z+zIncreasingCohesion)/zIncreasingCohesion;
+    end
+    return {
+      cohesion = cohesion
+    }
+    end
 [s_xx, s_yy, s_zz, s_xy, s_yz, s_xz]: !Include Mw_78_Turkey_initial_stress.yaml
 [Tnuc_n,Tnuc_s,Tnuc_d]: !Include Mw_78_Turkey_nucleation_stress.yaml

@@ -28,24 +28,37 @@ model: !Switch
       [SH_max]: !Any
           components:
             - !GroupFilter
-              groups: [67,68]
-              components: !ConstantMap
-                map:
-                  SH_max: 25.0
+              groups: [1,66,67,68]
+              components: !LayeredModel
+                map: !AffineMap
+                  matrix:
+                    xy: [1.0, 1.0, 0.0]
+                  translation:
+                    xy: 0
+                interpolation: linear
+                parameters: [SH_max]
+                nodes:
+                    -1e10: [-20.0]
+                    -85e3: [-20.0]
+                    -25e3: [-10.0]
+                    35e3: [15.0]
+                    115e3: [15.0]
+                    175e3: [25.0]
+                    1e10: [25.0]
             - !GroupFilter
-              groups: [65,66]
+              groups: [65]
               components: !ConstantMap
                 map:
-                  SH_max: -15.0
+                    SH_max:  -10.0
       [S]: !Any
           components:
             - !GroupFilter
-              groups: [66,67,68]
+              groups: [1,66,67,68]
               components: !LuaMap
                 returns: [S]
                 function: |
                  function f (x)
-                  R = 0.5
+                  R = 0.55
                   return {
                     S = (1.0/R-1.0)
                   }
@@ -56,7 +69,7 @@ model: !Switch
                 returns: [S]
                 function: |
                  function f (x)
-                  R = 0.65
+                  R = 0.8
                   return {
                     S = (1.0/R-1.0)
                   }
@@ -66,7 +79,7 @@ model: !Switch
         mu_d:      0.2
         mu_s:      0.6
         cohesion:  0.0
-        s2ratio:   0.5
+        s2ratio: 0.75
         S_v: 2
   [sig_zz]: !Include Mw_78_Turkey_sig_zz.yaml
 components: !LuaMap
