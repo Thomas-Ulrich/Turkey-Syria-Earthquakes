@@ -17,7 +17,7 @@ from cmcrameri import cm
 from scipy.interpolate import RegularGridInterpolator
 
 
-def setup_map(ax, gridlines_left=True):
+def setup_map(ax, gridlines_left=True, draw_labels=True):
     """Setup the background map with cartopy"""
     ax.set_extent([36, 38.8, 36.0, 38.2], crs=ccrs.PlateCarree())
     scale = "10m"
@@ -25,13 +25,12 @@ def setup_map(ax, gridlines_left=True):
     ax.add_feature(cfeature.OCEAN.with_scale(scale))
     ax.add_feature(cfeature.COASTLINE.with_scale(scale))
     ax.add_feature(cfeature.BORDERS.with_scale(scale), linestyle=":")
-    locs = np.arange(-180, 180, 2.0)
-    gl = ax.gridlines(draw_labels=True, ylocs=locs, xlocs=locs)
+    locs = np.arange(-180, 180, 1.0)
+    gl = ax.gridlines(draw_labels=draw_labels, ylocs=locs, xlocs=locs)
     gl.right_labels = False
     gl.top_labels = False
     gl.left_labels = gridlines_left
-    for fault in ["main_fault_segmented", "fault_near_hypo"]:
-        fn = f"../geometry/{fault}.shp"
+    for fn in ["../ThirdParty/Turkey_Emergency_EQ_Data/simple_fault_2023-02-17/simple_fault_2023-2-17.shp"]:
         sf = shp.Reader(fn)
         for sr in sf.shapeRecords():
             listx = []
@@ -39,7 +38,7 @@ def setup_map(ax, gridlines_left=True):
             for xNew, yNew in sr.shape.points:
                 listx.append(xNew)
                 listy.append(yNew)
-            ax.plot(listx, listy, "k")
+            ax.plot(listx, listy, "k", linewidth=0.5)
 
 
 def tree_query(arguments):
@@ -119,8 +118,8 @@ def read_seissol_surface_data(xdmfFilename):
     # project the data to geocentric (lat, lon)
 
     myproj = "+proj=tmerc +datum=WGS84 +k=0.9996 +lon_0=37.0 +lat_0=37.0"
-    transformer = Transformer.from_crs(myproj, "epsg:4326")
-    lats, lons = transformer.transform(xyz[:, 0], xyz[:, 1])
+    transformer = Transformer.from_crs(myproj, "epsg:4326", always_xy=True)
+    lons, lats = transformer.transform(xyz[:, 0], xyz[:, 1])
     xy = np.vstack((lons, lats)).T
 
     # compute triangule barycenter
@@ -290,6 +289,13 @@ parser.add_argument(
     help="plot obs-syn instead on synthetics",
 )
 
+parser.add_argument(
+    "--vmax",
+    nargs=1,
+    default=([4.0]),
+    help="max of colorbar",
+    type=float
+)
 
 args = parser.parse_args()
 
@@ -317,7 +323,7 @@ elif args.band[0] in ["azimuth", "range"]:
     fn = "../ThirdParty/Displacement_TUR_20230114_20230207_1529_Data/20230114_HH_lv_theta.geo.tif"
     lon_g, lat_g, theta_g = read_observation_data_one_band(fn)
 
-vmax = 4
+vmax = args.vmax[0]
 vmin = -vmax
 
 c = ax[0].pcolormesh(
@@ -336,7 +342,7 @@ if args.surface:
     )
     # this is an inset axes over the main axes
     ax.append(ax[0].inset_axes([0.45, 0.01, 0.54, 0.54], projection=ccrs.PlateCarree()))
-    setup_map(ax[1], gridlines_left=False)
+    setup_map(ax[1], gridlines_left=False, draw_labels=False)
 
     if args.band[0] == "EW":
         syn_to_plot = U
