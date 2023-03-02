@@ -12,7 +12,8 @@ def computeMw(label, time, moment_rate):
     print(f"{label} moment magnitude: {Mw} (M0 = {M0:.4e})")
 
 
-ps = 8
+ps = 12
+lw = 1
 matplotlib.rcParams.update({"font.size": ps})
 plt.rcParams["font.family"] = "sans"
 matplotlib.rc("xtick", labelsize=ps)
@@ -29,9 +30,9 @@ args = parser.parse_args()
 if args.labels:
     assert len(args.prefix_paths) == len(args.labels)
 
-fig = plt.figure(figsize=(3.3, 3.3 * 6 / 16), dpi=80)
+fig = plt.figure(figsize=(7.0, 7.0 * 6 / 16), dpi=80)
 ax = fig.add_subplot(111)
-cols = ["k", "r", "g", "b", "y"]
+cols = ["m", "k", "g", "b", "y"]
 
 for i, prefix_path in enumerate(args.prefix_paths):
     df = pd.read_csv(f"{prefix_path}-energy.csv")
@@ -43,12 +44,22 @@ for i, prefix_path in enumerate(args.prefix_paths):
         df["seismic_moment_rate"] / 1e19,
         cols[i],
         label=label,
-        linewidth=0.5,
+        linewidth=lw,
     )
     computeMw(label, df.index.values, df["seismic_moment_rate"])
 
+Melgar = np.loadtxt("../ThirdParty/moment_rate_Melgar_et_al.txt")
+plt.plot(
+    Melgar[:, 0],
+    Melgar[:, 1],
+    cols[len(args.prefix_paths)],
+    label="Melgar et al., 2023",
+    linewidth=lw,
+)
+
+
 plt.legend(frameon=False)
-plt.xlim([0, 100])
+plt.xlim([0, 75])
 plt.ylim(bottom=0)
 
 ax.spines["top"].set_visible(False)
