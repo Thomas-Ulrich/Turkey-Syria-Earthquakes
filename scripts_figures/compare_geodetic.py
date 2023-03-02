@@ -15,6 +15,13 @@ from multiprocessing import Pool, cpu_count, Manager
 from pyproj import Transformer
 from cmcrameri import cm
 from scipy.interpolate import RegularGridInterpolator
+import matplotlib
+
+ps = 12
+matplotlib.rcParams.update({"font.size": ps})
+plt.rcParams["font.family"] = "sans"
+matplotlib.rc("xtick", labelsize=ps)
+matplotlib.rc("ytick", labelsize=ps)
 
 
 def setup_map(ax, gridlines_left=True, draw_labels=True):
@@ -30,7 +37,9 @@ def setup_map(ax, gridlines_left=True, draw_labels=True):
     gl.right_labels = False
     gl.top_labels = False
     gl.left_labels = gridlines_left
-    for fn in ["../ThirdParty/Turkey_Emergency_EQ_Data/simple_fault_2023-02-17/simple_fault_2023-2-17.shp"]:
+    for fn in [
+        "../ThirdParty/Turkey_Emergency_EQ_Data/simple_fault_2023-02-17/simple_fault_2023-2-17.shp"
+    ]:
         sf = shp.Reader(fn)
         for sr in sf.shapeRecords():
             listx = []
@@ -290,18 +299,14 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--vmax",
-    nargs=1,
-    default=([4.0]),
-    help="max of colorbar",
-    type=float
+    "--vmax", nargs=1, default=([4.0]), help="max of colorbar", type=float
 )
 
 args = parser.parse_args()
 
 
 fig = plt.figure()
-fig.set_size_inches(10, 10)
+fig.set_size_inches(5, 4.5)
 ax = []
 ax.append(fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree()))
 setup_map(ax[0])
@@ -383,7 +388,7 @@ fig.colorbar(c, ax=ax[-1], cax=cbaxes)
 
 
 plt.title(args.band[0])
-fn = f"comparison_geodetic_{args.band[0]}.png"
-plt.savefig(fn, dpi=200)
+fn = f"comparison_geodetic_{args.band[0]}.{args.extension[0]}"
+plt.savefig(fn, dpi=100, bbox_inches="tight")
 print(f"done writing {fn}")
 # plt.show()
