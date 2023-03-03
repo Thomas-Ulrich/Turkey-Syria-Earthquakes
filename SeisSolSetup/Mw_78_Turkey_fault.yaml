@@ -1,23 +1,46 @@
 !Switch
-[mu_s, forced_rupture_time,d_c, mu_d]: !ConstantMap
+[mu_s, d_c, mu_d, Tnuc_n, Tnuc_s, Tnuc_d]: !ConstantMap
   map:
     mu_s: 0.6
     mu_d: 0.2
     d_c: 0.4
-    forced_rupture_time: 1e10
+    Tnuc_n: 0
+    Tnuc_s: 0
+    Tnuc_d: 0
+[forced_rupture_time]: !LuaMap
+  returns: [forced_rupture_time]
+  function: |
+      function f (x)
+        xha = {9199.57641228, 29894.97015349, -8600.}
+        xhb = {19756.34641006, 113275.96252695, -7063.}
+        r_crita = 1500.0
+        r_critb = 3000.0
+        ra = math.sqrt((x["x"]-xha[1])^2 + (x["y"]-xha[2])^2 + (x["z"]-xha[3])^2 )
+        rb = math.sqrt((x["x"]-xhb[1])^2 + (x["y"]-xhb[2])^2 + (x["z"]-xhb[3])^2 )
+        Vs = 3464.0
+        if (ra <= r_crita) then
+          forced_rupture_time =  ra/(0.7*Vs)+(0.081*r_crita/(0.7*Vs))*(1.0/(1.0-(ra/r_crita)^2)-1.0)
+        elseif (rb <= r_critb) then
+          forced_rupture_time =  100.00 + rb/(0.7*Vs)+(0.081*r_critb/(0.7*Vs))*(1.0/(1.0-(rb/r_critb)^2)-1.0)
+        else
+          forced_rupture_time = 1000000000.0
+        end
+        return {
+          forced_rupture_time = forced_rupture_time
+        }
+      end
 [cohesion]: !LuaMap
   returns: [cohesion]
   function: |
    function f (x)
     z = x["z"]
-    cohesion = -10.0^6
+    cohesion = -1.0e6
     zIncreasingCohesion = 6000.0
     if (z >= -zIncreasingCohesion) then
-      cohesion = cohesion - 10.0^5 * (z+zIncreasingCohesion)/zIncreasingCohesion;
+      cohesion = cohesion - 0.1e6 * (z+zIncreasingCohesion)/zIncreasingCohesion;
     end
     return {
       cohesion = cohesion
     }
     end
 [s_xx, s_yy, s_zz, s_xy, s_yz, s_xz]: !Include Mw_78_Turkey_initial_stress.yaml
-[Tnuc_n,Tnuc_s,Tnuc_d]: !Include Mw_78_Turkey_nucleation_stress.yaml

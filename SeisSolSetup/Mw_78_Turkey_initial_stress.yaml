@@ -29,22 +29,40 @@ model: !Switch
           components:
             - !GroupFilter
               groups: [1,66,67,68]
-              components: !LayeredModel
-                map: !AffineMap
-                  matrix:
-                    xy: [1.0, 1.0, 0.0]
-                  translation:
-                    xy: 0
-                interpolation: linear
-                parameters: [SH_max]
-                nodes:
-                    -1e10: [-20.0]
-                    -85e3: [-20.0]
-                    -25e3: [-10.0]
-                    35e3: [15.0]
-                    115e3: [15.0]
-                    175e3: [25.0]
-                    1e10: [25.0]
+              components: !LuaMap
+                returns: [SH_max]
+                function: |
+                 function f (x)
+                    x1 = -0.7682212795973759 * x["x"] + x["y"] 
+
+                    if x1 > 60e3 then
+                      -- this is roughly the region of the main aftershock
+                      xi = x["x"] + x["y"] 
+                      aX =  {-1e10, 80e3, 120e3, 140e3, 180e3, 1e10}
+                      aData = {25,   25,     70,    70,  25.0, 25.0}
+                    else
+                      -- this is roughly the region of the mainshock
+                      xi = x["x"] + x["y"] 
+                      aX =  {-1e10, -85e3, -25e3, 35e3, 115e3, 175e3, 1e10}
+                      -- aData = {-20,   -20,   -10, 15.0,  15.0,  25.0, 25.0}
+                      aData = {-20,   -20,   -10, 15.0,  15.0,  25.0, 25.0}
+                    end
+
+                    -- this implements a linear interpolation
+                    if (aX[1] > xi) or ( xi>aX[#aX] ) then
+                      io.write(aX[1], " ", xi, " ", aX[#aX], " are not sorted as expected\n")
+                    end
+
+                    for i in pairs(aX) do
+                      if (aX[i]>xi) then
+                        SH_max = aData[i-1] + (xi - aX[i-1]) / (aX[i] - aX[i-1]) * (aData[i] - aData[i-1])
+                        break
+                      end
+                    end
+                    return {
+                      SH_max=SH_max
+                    }
+                 end
             - !GroupFilter
               groups: [65]
               components: !ConstantMap
@@ -58,7 +76,15 @@ model: !Switch
                 returns: [S]
                 function: |
                  function f (x)
-                  R = 0.55
+                  x1 = -0.7682212795973759 * x["x"] + x["y"] 
+                  if x1 > 60e3 then
+                    -- this is roughly the region of the main aftershock
+                    -- R = 0.50 for model with subshear on hypocenter fault
+                    R = 0.55
+                  else
+                    -- this is roughly the region of the mainshock
+                    R = 0.55
+                  end
                   return {
                     S = (1.0/R-1.0)
                   }
@@ -69,6 +95,7 @@ model: !Switch
                 returns: [S]
                 function: |
                  function f (x)
+                  -- R = 0.70 for model with subshear on hypocenter fault
                   R = 0.8
                   return {
                     S = (1.0/R-1.0)
