@@ -36,7 +36,6 @@ function: |
      rho = rho,
      mu = mu,
      lambda = lambda,
-     -- plastCo = 0.0001 * math.max(mu, 24239362183.242527)
-     plastCo = 0.0004 *mu
+     plastCo = 0.0002 * math.max(mu, 24239362183.242527)
     }
     end

@@ -12,8 +12,8 @@
   function: |
       function f (x)
         xha = {9199.57641228, 29894.97015349, -8600.}
-        xhb = {19756.34641006, 113275.96252695, -7063.}
-        r_crita = 1500.0
+        xhb = {20109.60910658,116253.58540175,-8628.}
+        r_crita = 2000.0
         r_critb = 3000.0
         ra = math.sqrt((x["x"]-xha[1])^2 + (x["y"]-xha[2])^2 + (x["z"]-xha[3])^2 )
         rb = math.sqrt((x["x"]-xhb[1])^2 + (x["y"]-xhb[2])^2 + (x["z"]-xhb[3])^2 )
@@ -34,10 +34,10 @@
   function: |
    function f (x)
     z = x["z"]
-    cohesion = -1.0e6
+    cohesion = -0.5e6
     zIncreasingCohesion = 6000.0
     if (z >= -zIncreasingCohesion) then
-      cohesion = cohesion - 0.1e6 * (z+zIncreasingCohesion)/zIncreasingCohesion;
+      cohesion = cohesion - 1.0e6 * (z+zIncreasingCohesion)/zIncreasingCohesion;
     end
     return {
       cohesion = cohesion

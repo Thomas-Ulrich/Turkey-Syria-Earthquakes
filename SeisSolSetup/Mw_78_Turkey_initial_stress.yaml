@@ -79,7 +79,6 @@ model: !Switch
                   x1 = -0.7682212795973759 * x["x"] + x["y"] 
                   if x1 > 60e3 then
                     -- this is roughly the region of the main aftershock
-                    -- R = 0.50 for model with subshear on hypocenter fault
                     R = 0.55
                   else
                     -- this is roughly the region of the mainshock
@@ -95,7 +94,7 @@ model: !Switch
                 returns: [S]
                 function: |
                  function f (x)
-                  -- R = 0.70 for model with subshear on hypocenter fault
+                  -- R = 0.6 for model with subshear on hypocenter fault
                   R = 0.8
                   return {
                     S = (1.0/R-1.0)
