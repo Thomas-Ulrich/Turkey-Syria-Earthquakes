@@ -39,7 +39,7 @@ model: !Switch
                       -- this is roughly the region of the main aftershock
                       xi = x["x"] + x["y"] 
                       aX =  {-1e10, 80e3, 120e3, 140e3, 180e3, 1e10}
-                      aData = {25,   25,     70,    70,  25.0, 25.0}
+                      aData = {40,   40,     70,    70,  25.0, 25.0}
                     else
                       -- this is roughly the region of the mainshock
                       xi = x["x"] + x["y"] 
@@ -82,7 +82,21 @@ model: !Switch
                     R = 0.55
                   else
                     -- this is roughly the region of the mainshock
-                    R = 0.55
+                    xi = x["x"] + x["y"] 
+                    aX =  {-1e10, -105e3, -85e3, 1e10}
+                    aData = {0.3, 0.3,  0.55,  0.55}
+                    -- this implements a linear interpolation
+                    if (aX[1] > xi) or ( xi>aX[#aX] ) then
+                      io.write(aX[1], " ", xi, " ", aX[#aX], " are not sorted as expected\n")
+                    end
+
+                    for i in pairs(aX) do
+                      if (aX[i]>xi) then
+                        R = aData[i-1] + (xi - aX[i-1]) / (aX[i] - aX[i-1]) * (aData[i] - aData[i-1])
+                        break
+                      end
+                    end
+
                   end
                   return {
                     S = (1.0/R-1.0)
