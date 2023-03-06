@@ -28,8 +28,12 @@ model: !Switch
       [SH_max]: !Any
           components:
             - !GroupFilter
-              groups: [1,66,67,68]
-              components: !LuaMap
+              # This is the 7.8 hypocenter fault
+              groups: [65]
+              components: !ConstantMap
+                map:
+                    SH_max:  -10.0
+            - !LuaMap
                 returns: [SH_max]
                 function: |
                  function f (x)
@@ -38,13 +42,12 @@ model: !Switch
                     if x1 > 60e3 then
                       -- this is roughly the region of the main aftershock
                       xi = x["x"] + x["y"] 
-                      aX =  {-1e10, 80e3, 120e3, 140e3, 180e3, 1e10}
-                      aData = {40,   40,     70,    70,  25.0, 25.0}
+                      aX =  {-1e10, 80e3, 115e3, 140e3, 175e3, 1e10}
+                      aData = {50,   50,     70,    70,  25.0, 25.0}
                     else
                       -- this is roughly the region of the mainshock
                       xi = x["x"] + x["y"] 
                       aX =  {-1e10, -85e3, -25e3, 35e3, 115e3, 175e3, 1e10}
-                      -- aData = {-20,   -20,   -10, 15.0,  15.0,  25.0, 25.0}
                       aData = {-20,   -20,   -10, 15.0,  15.0,  25.0, 25.0}
                     end
 
@@ -63,46 +66,11 @@ model: !Switch
                       SH_max=SH_max
                     }
                  end
-            - !GroupFilter
-              groups: [65]
-              components: !ConstantMap
-                map:
-                    SH_max:  -10.0
+
       [S]: !Any
           components:
             - !GroupFilter
-              groups: [1,66,67,68]
-              components: !LuaMap
-                returns: [S]
-                function: |
-                 function f (x)
-                  x1 = -0.7682212795973759 * x["x"] + x["y"] 
-                  if x1 > 60e3 then
-                    -- this is roughly the region of the main aftershock
-                    R = 0.55
-                  else
-                    -- this is roughly the region of the mainshock
-                    xi = x["x"] + x["y"] 
-                    aX =  {-1e10, -105e3, -85e3, 1e10}
-                    aData = {0.3, 0.3,  0.55,  0.55}
-                    -- this implements a linear interpolation
-                    if (aX[1] > xi) or ( xi>aX[#aX] ) then
-                      io.write(aX[1], " ", xi, " ", aX[#aX], " are not sorted as expected\n")
-                    end
-
-                    for i in pairs(aX) do
-                      if (aX[i]>xi) then
-                        R = aData[i-1] + (xi - aX[i-1]) / (aX[i] - aX[i-1]) * (aData[i] - aData[i-1])
-                        break
-                      end
-                    end
-
-                  end
-                  return {
-                    S = (1.0/R-1.0)
-                  }
-                  end
-            - !GroupFilter
+              # This is the 7.8 hypocenter fault
               groups: [65]
               components: !LuaMap
                 returns: [S]
@@ -110,6 +78,37 @@ model: !Switch
                  function f (x)
                   -- R = 0.6 for model with subshear on hypocenter fault
                   R = 0.8
+                  return {
+                    S = (1.0/R-1.0)
+                  }
+                  end
+            - !LuaMap
+                returns: [S]
+                function: |
+                 function f (x)
+                  x1 = -0.7682212795973759 * x["x"] + x["y"] 
+                  xi = x["x"] + x["y"] 
+                  if x1 > 60e3 then
+                    -- this is roughly the region of the main aftershock
+                    aX =  {-1e10, 80e3, 115e3, 140e3, 175e3, 1e10}
+                    aData = {0.8,   0.8,     0.8,    0.8,  0.55, 0.55}
+                  else
+                    -- this is roughly the region of the mainshock
+                    aX =  {-1e10, -105e3, -85e3, 1e10}
+                    aData = {0.3, 0.3,  0.55,  0.55}
+                  end
+                  -- this implements a linear interpolation
+                  if (aX[1] > xi) or ( xi>aX[#aX] ) then
+                    io.write(aX[1], " ", xi, " ", aX[#aX], " are not sorted as expected\n")
+                  end
+
+                  for i in pairs(aX) do
+                    if (aX[i]>xi) then
+                      R = aData[i-1] + (xi - aX[i-1]) / (aX[i] - aX[i-1]) * (aData[i] - aData[i-1])
+                      break
+                    end
+                  end
+
                   return {
                     S = (1.0/R-1.0)
                   }
