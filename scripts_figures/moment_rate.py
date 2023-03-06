@@ -30,46 +30,73 @@ args = parser.parse_args()
 if args.labels:
     assert len(args.prefix_paths) == len(args.labels)
 
-fig = plt.figure(figsize=(7.0, 7.0 * 6 / 16), dpi=80)
-ax = fig.add_subplot(111)
-cols = ["m", "k", "g", "b", "y"]
+fig = []
+ax = []
+for j, event in enumerate(["mainshock", "second_event"]):
+    fig.append(plt.figure(figsize=(7.0, 7.0 * 6 / 16), dpi=80))
+    ax.append(fig[j].add_subplot(111))
+
+cols = ["m", "g", "b", "y"]
 
 for i, prefix_path in enumerate(args.prefix_paths):
-    df = pd.read_csv(f"{prefix_path}-energy.csv")
-    df = df.pivot_table(index="time", columns="variable", values="measurement")
-    df["seismic_moment_rate"] = np.gradient(df["seismic_moment"], df.index[1])
-    label = args.labels[i] if args.labels else os.path.basename(prefix_path)
-    plt.plot(
-        df.index.values,
-        df["seismic_moment_rate"] / 1e19,
-        cols[i],
-        label=label,
+    df0 = pd.read_csv(f"{prefix_path}-energy.csv")
+    df0 = df0.pivot_table(index="time", columns="variable", values="measurement")
+    for j, event in enumerate(["mainshock", "second_event"]):
+        if event == "mainshock":
+            df = df0[df0.index < 100]
+            t0 = 0
+        else:
+            df = df0[df0.index > 100]
+            if df.empty:
+                print(f"no second event in {prefix_path}")
+                continue
+            t0 = 100
+        df["seismic_moment_rate"] = np.gradient(
+            df["seismic_moment"], df.index[1] - df.index[0]
+        )
+        label = args.labels[i] if args.labels else os.path.basename(prefix_path)
+        ax[j].plot(
+            df.index.values - t0,
+            df["seismic_moment_rate"] / 1e19,
+            cols[i],
+            label=label,
+            linewidth=lw,
+        )
+        computeMw(label, df.index.values, df["seismic_moment_rate"])
+
+for j, event in enumerate(["mainshock", "second_event"]):
+    Melgar = np.loadtxt(f"../ThirdParty/moment_rate_Melgar_et_al_{event}.txt")
+    ax[j].plot(
+        Melgar[:, 0],
+        Melgar[:, 1],
+        "k",
+        label="Melgar et al., 2023",
         linewidth=lw,
     )
-    computeMw(label, df.index.values, df["seismic_moment_rate"])
+    Okuwaki = np.loadtxt(f"../ThirdParty/moment_rate_Okuwaki_et_al_23_{event}.txt")
+    ax[j].plot(
+        Okuwaki[:, 0],
+        Okuwaki[:, 1],
+        "k:",
+        label="Okuwaki et al., 2023",
+        linewidth=lw,
+    )
 
-Melgar = np.loadtxt("../ThirdParty/moment_rate_Melgar_et_al.txt")
-plt.plot(
-    Melgar[:, 0],
-    Melgar[:, 1],
-    cols[len(args.prefix_paths)],
-    label="Melgar et al., 2023",
-    linewidth=lw,
-)
+    ax[j].legend(frameon=False)
+    if event == "mainshock":
+        ax[j].set_xlim([0, 75])
+    else:
+        ax[j].set_xlim([0, 40])
+    ax[j].set_ylim(bottom=0)
 
+    ax[j].spines["top"].set_visible(False)
+    ax[j].spines["right"].set_visible(False)
+    ax[j].get_xaxis().tick_bottom()
+    ax[j].get_yaxis().tick_left()
 
-plt.legend(frameon=False)
-plt.xlim([0, 75])
-plt.ylim(bottom=0)
+    ax[j].set_ylabel(r"moment rate (e19 $\times$ Nm/s)")
+    ax[j].set_xlabel("time (s)")
 
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.get_xaxis().tick_bottom()
-ax.get_yaxis().tick_left()
-
-ax.set_ylabel(r"moment rate (e19 $\times$ Nm/s)")
-ax.set_xlabel("time (s)")
-
-fn = "output/moment_rate.svg"
-plt.savefig(fn, bbox_inches="tight")
-print(f"done write {fn}")
+    fn = f"output/moment_rate_{event}.png"
+    fig[j].savefig(fn, bbox_inches="tight")
+    print(f"done write {fn}")
