@@ -32,6 +32,8 @@ SetupMap(ax[0])
 
 stations2plot = [
     "0215",
+    "0216",
+    "0217",
     "0213",
     "4611",
     "4632",
@@ -75,7 +77,7 @@ for index, row in df_no.iterrows():
             facecolors="none",
             edgecolors=c,
         )
-        # plt.text(row["Longitude"] + 0.002, row["Latitude"], row["Code"], size=8)
+        plt.text(row["Longitude"] + 0.002, row["Latitude"], row["Code"], size=8)
 
 df_yes = df.loc[df["waveform_to_plot"]]
 for index, row in df_yes.iterrows():

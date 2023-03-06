@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 with pygmt.clib.Session() as session:
-    session.call_module('gmtset', 'FONT 6p')
+    session.call_module('gmtset', 'FONT 12p,Helvetica,black')
 
 fig = pygmt.Figure()
 # Using the origin projection pole
@@ -12,8 +12,8 @@ fig.coast(
     projection="Oc34/34/-90/50/20c",
     frame="afg",
     # Set bottom left and top right coordinates of the figure with "+r"
-    region="36/36/38.5/38.5+r",
-    land="gray",
+    region="36/35.8/38.9/38.5+r",
+    land="lightgrey",
     shorelines="1/thin",
     water="lightblue",
 )
@@ -25,13 +25,13 @@ for fn in ["../ThirdParty/Turkey_Emergency_EQ_Data/simple_fault_2023-02-17/simpl
         for xNew, yNew in sr.shape.points:
             listx.append(xNew)
             listy.append(yNew)
-        fig.plot(x = listx, y = listy)#, "k", linewidth=0.5)
+        fig.plot(x = listx, y = listy)#, width=2.0)
 
 stations2plot = [
-    "0215",
+    "4404",
     "0213",
     "4611",
-    "4632",
+    "2712",
     "4615",
     "4625",
     "4616",
@@ -39,7 +39,7 @@ stations2plot = [
     "3138",
     "3139",
     "3141",
-    "3140",
+    "3136",
 ]
 
 
@@ -58,7 +58,7 @@ for index, row in df_no.iterrows():
             y=row["Latitude"],
             style="c",
             fill='black',
-            size=[0.05],
+            size=[0.125],
         )
 
 df_yes = df.loc[df["waveform_to_plot"]]
@@ -70,8 +70,8 @@ for index, row in df_yes.iterrows():
             y=row["Latitude"],
             style="c",
             fill='blue',
-            size=[0.1],
+            size=[0.25],
         )
-        fig.text(text=row["Code"], x=row["Longitude"] + 0.07, y=row["Latitude"], font="6p,Helvetica,black")
+        fig.text(text=row["Code"], x=row["Longitude"] + 0.07, y=row["Latitude"], font="12p,Helvetica,black")
 
-fig.show()
+fig.savefig('oblique_station.png')
