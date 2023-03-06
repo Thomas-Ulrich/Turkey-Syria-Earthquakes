@@ -28,8 +28,8 @@ def setup_map(ax, gridlines_left=True, draw_labels=True):
     """Setup the background map with cartopy"""
     ax.set_extent([36, 38.8, 36.0, 38.2], crs=ccrs.PlateCarree())
     scale = "10m"
-    ax.add_feature(cfeature.LAND.with_scale(scale))
-    ax.add_feature(cfeature.OCEAN.with_scale(scale))
+    ax.add_feature(cfeature.LAND.with_scale(scale), facecolor='whitesmoke', rasterized=True)
+    ax.add_feature(cfeature.OCEAN.with_scale(scale), rasterized=True)
     ax.add_feature(cfeature.COASTLINE.with_scale(scale))
     ax.add_feature(cfeature.BORDERS.with_scale(scale), linestyle=":")
     locs = np.arange(-180, 180, 1.0)
@@ -385,7 +385,6 @@ if not args.noVector and args.band[0] in ["EW", "NS"]:
 # left, bottom, width, height
 cbaxes = fig.add_axes([0.92, 0.25, 0.01, 0.25])
 fig.colorbar(c, ax=ax[-1], cax=cbaxes)
-
 
 plt.title(args.band[0])
 fn = f"comparison_geodetic_{args.band[0]}.{args.extension[0]}"

@@ -26,9 +26,7 @@ class seissolxdmfExtended(seissolxdmf.seissolxdmf):
                 strike[i, :] = a[:2]
             else:
                 strike[i, :] = b[:2]
-        print(np.where(np.isnan(strike)))
         strike = strike[:, :] / np.linalg.norm(strike[:, :], axis=1)[:, None]
-        print(np.where(np.isnan(strike)))
         return strike
 
 
@@ -60,7 +58,7 @@ def get_fault_trace():
 
 # parsing python arguments
 parser = argparse.ArgumentParser(description="extract slip profile along fault trace")
-parser.add_argument("--fault", nargs=1, help="fault xdmf file name", required=True)
+parser.add_argument("--fault", nargs='+', help="fault xdmf file name", required=True)
 parser.add_argument(
     "--downsample", nargs=1, help="take one node every n", default=[1], type=int
 )
@@ -86,27 +84,6 @@ acc_dist = np.insert(acc_dist, 0, 0)
 
 trace_nodes = get_fault_trace()[:: args.downsample[0]]
 
-sx = seissolxdmfExtended(args.fault[0])
-fault_centers = sx.compute_centers()
-strike = sx.compute_strike()
-
-idt = 0
-Sls = np.abs(sx.ReadData("Sls", idt))
-
-tree = spatial.KDTree(fault_centers)
-dist, idsf = tree.query(trace_nodes)
-
-slip_at_trace = Sls[idsf]
-strike = strike[idsf]
-
-tree = spatial.KDTree(trace_nodes[:, 0:2])
-dist, idsf2 = tree.query(xy)
-slip_at_trace = slip_at_trace[idsf2]
-strike = strike[idsf2]
-
-ew = np.abs(slip_at_trace * strike[:, 0])
-ns = np.abs(slip_at_trace * strike[:, 1])
-
 fig = plt.figure(figsize=(5, 3.0))
 ax = fig.add_subplot(111)
 ax.set_xlabel("distance along strike (km)")
@@ -124,8 +101,31 @@ plt.errorbar(
     acc_dist, df["ns"], yerr=df["ens"], color="b", linestyle="--", linewidth=lw
 )
 
-plt.plot(acc_dist, ns, "b", linewidth=lw, label="NS")
-plt.plot(acc_dist, ew, "orange", linewidth=lw, label="EW")
+for i, fn in enumerate(args.fault):
+    sx = seissolxdmfExtended(fn)
+    fault_centers = sx.compute_centers()
+    strike = sx.compute_strike()
+
+    idt = sx.ReadNdt() - 1
+    Sls = np.abs(sx.ReadData("Sls", idt))
+
+    tree = spatial.KDTree(fault_centers)
+    dist, idsf = tree.query(trace_nodes)
+
+    slip_at_trace = Sls[idsf]
+    strike = strike[idsf]
+
+    tree = spatial.KDTree(trace_nodes[:, 0:2])
+    dist, idsf2 = tree.query(xy)
+    slip_at_trace = slip_at_trace[idsf2]
+    strike = strike[idsf2]
+
+    ew = np.abs(slip_at_trace * strike[:, 0])
+    ns = np.abs(slip_at_trace * strike[:, 1])
+
+    plt.plot(acc_dist, ns, "b", linewidth=lw*(1+0.5*i), label="NS")
+    plt.plot(acc_dist, ew, "orange", linewidth=lw*(1+0.5*i), label="EW")
+
 plt.legend(frameon=False)
 plt.gcf().subplots_adjust(bottom=0.15)
 plt.show()
