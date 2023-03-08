@@ -36,7 +36,8 @@ for j, event in enumerate(["mainshock", "second_event"]):
     fig.append(plt.figure(figsize=(7.0, 7.0 * 6 / 16), dpi=80))
     ax.append(fig[j].add_subplot(111))
 
-cols = ["m", "g", "b", "y"]
+cols_mainshock = ["m", "g", "b", "y"]
+cols_2nd = ["b", "m", "g", "y"]
 
 for i, prefix_path in enumerate(args.prefix_paths):
     df0 = pd.read_csv(f"{prefix_path}-energy.csv")
@@ -45,12 +46,14 @@ for i, prefix_path in enumerate(args.prefix_paths):
         if event == "mainshock":
             df = df0[df0.index < 100]
             t0 = 0
+            cols = cols_mainshock
         else:
             df = df0[df0.index > 100]
             if df.empty:
                 print(f"no second event in {prefix_path}")
                 continue
             t0 = 100
+            cols = cols_2nd
         df["seismic_moment_rate"] = np.gradient(
             df["seismic_moment"], df.index[1] - df.index[0]
         )
@@ -84,7 +87,7 @@ for j, event in enumerate(["mainshock", "second_event"]):
 
     ax[j].legend(frameon=False)
     if event == "mainshock":
-        ax[j].set_xlim([0, 75])
+        ax[j].set_xlim([0, 80])
     else:
         ax[j].set_xlim([0, 40])
     ax[j].set_ylim(bottom=0)
@@ -97,6 +100,6 @@ for j, event in enumerate(["mainshock", "second_event"]):
     ax[j].set_ylabel(r"moment rate (e19 $\times$ Nm/s)")
     ax[j].set_xlabel("time (s)")
 
-    fn = f"output/moment_rate_{event}.png"
+    fn = f"output/moment_rate_{event}.svg"
     fig[j].savefig(fn, bbox_inches="tight")
     print(f"done write {fn}")

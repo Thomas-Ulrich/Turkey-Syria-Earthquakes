@@ -58,7 +58,15 @@ def get_fault_trace():
 
 # parsing python arguments
 parser = argparse.ArgumentParser(description="extract slip profile along fault trace")
-parser.add_argument("--fault", nargs='+', help="fault xdmf file name", required=True)
+parser.add_argument(
+    "--event",
+    nargs=1,
+    help="1: mainshock, 2: aftershock",
+    choices=[1, 2],
+    required=True,
+    type=int,
+)
+parser.add_argument("--fault", nargs="+", help="fault xdmf file name", required=True)
 parser.add_argument(
     "--downsample", nargs=1, help="take one node every n", default=[1], type=int
 )
@@ -69,7 +77,13 @@ plt.rc("font", family="FreeSans", size=12)
 # plt.rc("font", size=8)
 # plt.rcParams["text.usetex"] = True
 
-fn = "../ThirdParty/offset_sentinel2.txt"
+if args.event[0] == 1:
+    fn = "../ThirdParty/offset_sentinel2.txt"
+    event = "mainshock"
+else:
+    fn = "../ThirdParty/EW_offset_sentinel2_Mw75.txt"
+    event = "2nd"
+
 df = pd.read_csv(fn, sep=" ")
 df = df.sort_values(by=["lon", "lat"])
 
@@ -84,7 +98,7 @@ acc_dist = np.insert(acc_dist, 0, 0)
 
 trace_nodes = get_fault_trace()[:: args.downsample[0]]
 
-fig = plt.figure(figsize=(5, 3.0))
+fig = plt.figure(figsize=(5.5, 3.0))
 ax = fig.add_subplot(111)
 ax.set_xlabel("distance along strike (km)")
 ax.set_ylabel("fault offset (m)")
@@ -94,12 +108,35 @@ ax.get_xaxis().tick_bottom()
 ax.get_yaxis().tick_left()
 
 lw = 0.5
-plt.errorbar(
-    acc_dist, df["ew"], yerr=df["eew"], color="orange", linestyle="--", linewidth=lw
-)
-plt.errorbar(
-    acc_dist, df["ns"], yerr=df["ens"], color="b", linestyle="--", linewidth=lw
-)
+if args.event[0] == 1:
+    plt.errorbar(
+        acc_dist,
+        df["ns"],
+        yerr=df["ens"],
+        color="b",
+        linestyle="--",
+        linewidth=lw,
+        label="NS from Sentinel 2",
+    )
+    plt.errorbar(
+        acc_dist,
+        df["ew"],
+        yerr=df["eew"],
+        color="orange",
+        linestyle="--",
+        linewidth=lw,
+        label="EW from Sentinel 2",
+    )
+else:
+    plt.errorbar(
+        acc_dist,
+        df["ew_offset"],
+        yerr=df["ew_error"],
+        color="orange",
+        linestyle="--",
+        linewidth=lw,
+        label="EW from Sentinel 2",
+    )
 
 for i, fn in enumerate(args.fault):
     sx = seissolxdmfExtended(fn)
@@ -123,12 +160,14 @@ for i, fn in enumerate(args.fault):
     ew = np.abs(slip_at_trace * strike[:, 0])
     ns = np.abs(slip_at_trace * strike[:, 1])
 
-    plt.plot(acc_dist, ns, "b", linewidth=lw*(1+0.5*i), label="NS")
-    plt.plot(acc_dist, ew, "orange", linewidth=lw*(1+0.5*i), label="EW")
+    plt.plot(acc_dist, ns, "b", linewidth=lw * (1 + 0.5 * i), label="NS synthetics")
+    plt.plot(
+        acc_dist, ew, "orange", linewidth=lw * (1 + 0.5 * i), label="EW synthetics"
+    )
 
-plt.legend(frameon=False)
-plt.gcf().subplots_adjust(bottom=0.15)
-plt.show()
-fn = f"comparison_offset.svg"
+if args.event[0] == 1:
+    ax.legend(frameon=False, ncol=2, bbox_to_anchor=(0.1, 1.05), loc="center left")
+
+fn = f"comparison_offset_{event}.svg"
 plt.savefig(fn, dpi=200)
 print(f"done writing {fn}")
