@@ -20,7 +20,7 @@ matplotlib.rc("xtick", labelsize=ps)
 matplotlib.rc("ytick", labelsize=ps)
 
 
-parser = argparse.ArgumentParser(description="plot Jason comparison")
+parser = argparse.ArgumentParser(description="plot moment rate comparison")
 parser.add_argument(
     "prefix_paths", nargs="+", help="path to prefix of simulations to plots"
 )
@@ -36,7 +36,7 @@ for j, event in enumerate(["mainshock", "second_event"]):
     fig.append(plt.figure(figsize=(7.0, 7.0 * 6 / 16), dpi=80))
     ax.append(fig[j].add_subplot(111))
 
-cols_mainshock = ["m", "g", "b", "y"]
+cols_mainshock = ["m", "b", "g", "y"]
 cols_2nd = ["b", "m", "g", "y"]
 
 for i, prefix_path in enumerate(args.prefix_paths):
