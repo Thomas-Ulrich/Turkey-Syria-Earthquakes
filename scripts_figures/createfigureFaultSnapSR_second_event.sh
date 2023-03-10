@@ -9,4 +9,4 @@ do
    filelist="$filelist output/trash_me$k.png"
 done
 echo $filelist
-python ~/TuSeisSolScripts/displayh5vtk/combine_images_vertically.py --inputs $filelist  --rel 0.2 --output $outFile
+python ~/TuSeisSolScripts/displayh5vtk/combine_images_vertically.py --inputs $filelist  --rel 0.2 1.0 --output $outFile

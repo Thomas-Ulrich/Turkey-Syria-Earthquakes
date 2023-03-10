@@ -11,4 +11,4 @@ do
 done
 echo $filelist
 
-python ~/TuSeisSolScripts/displayh5vtk/combine_images_vertically.py --inputs $filelist  --rel 0.35 --output $outFile
+python ~/TuSeisSolScripts/displayh5vtk/combine_images_vertically.py --inputs $filelist  --rel 0.35 1.0 --output $outFile
