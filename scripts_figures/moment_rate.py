@@ -10,10 +10,10 @@ def computeMw(label, time, moment_rate):
     M0 = np.trapz(moment_rate[:], x=time[:])
     Mw = 2.0 * np.log10(M0) / 3.0 - 6.07
     print(f"{label} moment magnitude: {Mw} (M0 = {M0:.4e})")
+    return Mw
 
 
 ps = 12
-lw = 1
 matplotlib.rcParams.update({"font.size": ps})
 plt.rcParams["font.family"] = "sans"
 matplotlib.rc("xtick", labelsize=ps)
@@ -33,7 +33,7 @@ if args.labels:
 fig = []
 ax = []
 for j, event in enumerate(["mainshock", "second_event"]):
-    fig.append(plt.figure(figsize=(7.0, 7.0 * 6 / 16), dpi=80))
+    fig.append(plt.figure(figsize=(7.5, 7.5 * 8.0 / 16), dpi=80))
     ax.append(fig[j].add_subplot(111))
 
 cols_mainshock = ["m", "b", "g", "y"]
@@ -58,14 +58,13 @@ for i, prefix_path in enumerate(args.prefix_paths):
             df["seismic_moment"], df.index[1] - df.index[0]
         )
         label = args.labels[i] if args.labels else os.path.basename(prefix_path)
+        Mw = computeMw(label, df.index.values, df["seismic_moment_rate"])
         ax[j].plot(
             df.index.values - t0,
             df["seismic_moment_rate"] / 1e19,
             cols[i],
-            label=label,
-            linewidth=lw,
+            label=f"{label} (Mw={Mw:.2f})",
         )
-        computeMw(label, df.index.values, df["seismic_moment_rate"])
 
 for j, event in enumerate(["mainshock", "second_event"]):
     Melgar = np.loadtxt(f"../ThirdParty/moment_rate_Melgar_et_al_{event}.txt")
@@ -74,7 +73,6 @@ for j, event in enumerate(["mainshock", "second_event"]):
         Melgar[:, 1],
         "k",
         label="Melgar et al., 2023",
-        linewidth=lw,
     )
     Okuwaki = np.loadtxt(f"../ThirdParty/moment_rate_Okuwaki_et_al_23_{event}.txt")
     ax[j].plot(
@@ -82,10 +80,9 @@ for j, event in enumerate(["mainshock", "second_event"]):
         Okuwaki[:, 1],
         "k:",
         label="Okuwaki et al., 2023",
-        linewidth=lw,
     )
 
-    ax[j].legend(frameon=False)
+    ax[j].legend(frameon=False, loc="upper right")
     if event == "mainshock":
         ax[j].set_xlim([0, 80])
     else:
