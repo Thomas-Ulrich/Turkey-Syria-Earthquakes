@@ -44,11 +44,17 @@ for i, prefix_path in enumerate(args.prefix_paths):
     df0 = df0.pivot_table(index="time", columns="variable", values="measurement")
     for j, event in enumerate(["mainshock", "second_event"]):
         if event == "mainshock":
-            df = df0[df0.index < 100]
+            df = df0[df0.index < 85]
+            print(
+                "warning: Mw computed over 0-85s (avoiding contribution of small residual moment after rupture)"
+            )
             t0 = 0
             cols = cols_mainshock
         else:
-            df = df0[df0.index > 100]
+            df = df0[(df0.index > 100) & (df0.index < 140)]
+            print(
+                "warning: Mw computed over 100-140s (avoiding contribution of small residual moment after rupture)"
+            )
             if df.empty:
                 print(f"no second event in {prefix_path}")
                 continue

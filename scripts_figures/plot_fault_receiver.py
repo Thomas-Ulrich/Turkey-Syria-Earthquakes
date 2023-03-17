@@ -26,31 +26,44 @@ def read_fault_receiver(fname):
         fr[name] = data[:, i]
     return fr
 
-
-fig = plt.figure(figsize=(3.0, 3.0 * 8 / 16), dpi=80)
+size = 2.5
+fig = plt.figure(figsize=(size, size * 8 / 16), dpi=80)
 ax = fig.add_subplot(111)
 
-folderprefix = "/home/ulrich/trash/test1_180_subshear_fr"
-idst = 13
-mytemplate = f"{folderprefix}-faultreceiver-{idst:05d}*"
-lFn = glob.glob(mytemplate)
-print(lFn)
-fname = lFn[0]
-fr = read_fault_receiver(fname)
+for folderprefix in ["/home/ulrich/trash/test1_180_subshear_fr"]: #, "/home/ulrich/trash/test1_180_subshear_fr2"]:
+    #folderprefix = "/home/ulrich/trash/test1_180_subshear_fr"
+    idst = 13
+    if folderprefix == "/home/ulrich/trash/test1_180_subshear_fr2":
+        idst = 15
+    #folderprefix = "/home/ulrich/trash/test1_180_subshear_fr2"
+    #idst = 13
+    if folderprefix == "/home/ulrich/trash/test1_180_subshear_fr2":
+        ls = '--'
+    else:
+        ls = '-'
 
-cohesion = 1 + 0.1 * (fr["z"] + 6000.0) / 6000.0
-ax.plot(
-    fr["Time"],
-    np.sqrt(fr["Ts0"] ** 2 + fr["Td0"] ** 2) / 1e6,
-    label="shear stress",
-    color="k",
-)
-ax.plot(
-    fr["Time"],
-    cohesion + fr["Mud"] * abs(fr["Pn0"] / 1e6),
-    label="fault strength",
-    color="r",
-)
+
+    mytemplate = f"{folderprefix}-faultreceiver-{idst:05d}*"
+    lFn = glob.glob(mytemplate)
+    print(lFn)
+    fname = lFn[0]
+    fr = read_fault_receiver(fname)
+
+    cohesion = 1 + 0.1 * (fr["z"] + 6000.0) / 6000.0
+    ax.plot(
+        fr["Time"],
+        np.sqrt(fr["Ts0"] ** 2 + fr["Td0"] ** 2) / 1e6,
+        label="shear stress",
+        color="k",
+        linestyle = ls
+    )
+    ax.plot(
+        fr["Time"],
+        cohesion + fr["Mud"] * abs(fr["Pn0"] / 1e6),
+        label="fault strength",
+        color="r",
+        linestyle = ls
+    )
 # plt.plot(fr['Time'], np.sqrt(fr['SRs']**2 + fr['SRd']**2), label='slip rate (m/s)')
 # plt.title(f"({fr['x']:.0f}, {fr['y']:.0f}, {fr['z']:.0f})")
 # plt.xlim([6,9])

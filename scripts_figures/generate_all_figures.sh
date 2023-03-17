@@ -2,9 +2,11 @@
 set -eo pipefail
 
 geodetic_figure=0
-colorbars=1
+colorbars=0
 sub_supershear_figure=0
-#python moment_rate.py $1 --label 'dynamic rupture scenario'
+python moment_rate.py $1 --label 'dynamic rupture scenario'
+python compute_average_Vr.py $1 --time_range 0 100
+python compute_average_Vr.py $2 --time_range 100 180
 
 if [ $colorbars -eq 1 ]
 then
