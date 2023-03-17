@@ -11,11 +11,11 @@ class seissolxdmfExtended(seissolxdmf.seissolxdmf):
 
 
 # parsing python arguments
-parser = argparse.ArgumentParser(description="compute average Vr")
+parser = argparse.ArgumentParser(description="compute median Vr")
 parser.add_argument(
     "--time_range",
     nargs=2,
-    help="time considered for computing average Vr",
+    help="time considered for computing median Vr",
     required=True,
     type=float,
 )
@@ -35,7 +35,7 @@ ids1 = np.where(RT < args.time_range[1])[0]
 ids2 = np.where(ASl > 0.1)[0]
 ids = np.intersect1d(ids0, ids1)
 ids = np.intersect1d(ids, ids2)
-print("average event", np.median(Vr[ids]))
+print("median event", np.median(Vr[ids]))
 
 if args.time_range[0] == 0.0:
     ids_loc = np.where(xyz[:, 0] > 22e3)[0]
