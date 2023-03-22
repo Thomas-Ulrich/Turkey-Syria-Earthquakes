@@ -76,8 +76,8 @@ model: !Switch
                 returns: [S]
                 function: |
                  function f (x)
-                  -- R = 0.6 for model with subshear on hypocenter fault
-                  R = 0.8
+                  -- R = 0.8 for model with supershear on hypocenter fault
+                  R = 0.6
                   return {
                     S = (1.0/R-1.0)
                   }
