@@ -24,3 +24,9 @@ python ~/TuSeisSolScripts/displayh5vtk/displayUnstructuredVtk.py $1last-fault.xd
 python ~/TuSeisSolScripts/displayh5vtk/displayUnstructuredVtk.py $2last-fault.xdmf --Data ASl --pvcc ../pvcc/SEviewTurkey_flatter.pvcc --BoundaryEdges --zoom 5.0 --crange 0 10 --colorScale hawaii_r0 --winSize 1000 600  --OSR --oneDtMem --output trash_me_sup1 --clip "0 60e3 0 -0.7682212795973759 1.0 0" --last
 python ~/TuSeisSolScripts/displayh5vtk/displayUnstructuredVtk.py $2last-fault.xdmf --Data Vr --pvcc ../pvcc/SEviewTurkey_flatter.pvcc --BoundaryEdges --zoom 5.0 --crange 0 6000 --colorScale buda0 --winSize 1000 600  --OSR --oneDtMem --output trash_me_sup2 --clip "0 60e3 0 -0.7682212795973759 1.0 0" --last
 python ~/TuSeisSolScripts/displayh5vtk/combine_images_vertically.py --inputs output/trash_me1.png output/trash_me2.png output/trash_me_sup1.png output/trash_me_sup2.png  --rel 0.5 1.05 --output $outFile --col 2
+
+# colorbars
+python ~/TuSeisSolScripts/displayh5vtk/plotColorBar.py viridis --crange 0 8 --labelfont 8 --hor --height 1.2 3.6
+python ~/TuSeisSolScripts/displayh5vtk/plotColorBar.py hawaii_r --crange 0 10 --labelfont 8 --hor --height 1.2 3.6 --nticks 3
+python ~/TuSeisSolScripts/displayh5vtk/plotColorBar.py buda --crange 0 6000 --labelfont 8 --hor --height 1.2 3.6 --nticks 3
+
