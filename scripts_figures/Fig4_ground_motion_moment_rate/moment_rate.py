@@ -30,6 +30,9 @@ args = parser.parse_args()
 if args.labels:
     assert len(args.prefix_paths) == len(args.labels)
 
+if not os.path.exists("output"):
+    os.makedirs("output")
+
 fig = []
 ax = []
 for j, event in enumerate(["mainshock", "second_event"]):
@@ -73,14 +76,14 @@ for i, prefix_path in enumerate(args.prefix_paths):
         )
 
 for j, event in enumerate(["mainshock", "second_event"]):
-    Melgar = np.loadtxt(f"../ThirdParty/moment_rate_Melgar_et_al_{event}.txt")
+    Melgar = np.loadtxt(f"../../ThirdParty/moment_rate_Melgar_et_al_{event}.txt")
     ax[j].plot(
         Melgar[:, 0],
         Melgar[:, 1],
         "k",
         label="Melgar et al., 2023",
     )
-    Okuwaki = np.loadtxt(f"../ThirdParty/moment_rate_Okuwaki_et_al_23_{event}.txt")
+    Okuwaki = np.loadtxt(f"../../ThirdParty/moment_rate_Okuwaki_et_al_23_{event}.txt")
     ax[j].plot(
         Okuwaki[:, 0],
         Okuwaki[:, 1],
