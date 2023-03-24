@@ -2,20 +2,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-import obspy
 import os
 import shapefile as shp
-import pandas as pd
 import rasterio
 import argparse
 import seissolxdmf
 import time
 from scipy import spatial
 from multiprocessing import Pool, cpu_count, Manager
-from pyproj import Transformer
 from cmcrameri import cm
-from scipy.interpolate import RegularGridInterpolator
 import matplotlib
+from geodetics_common import *
 
 ps = 12
 matplotlib.rcParams.update({"font.size": ps})
@@ -60,97 +57,6 @@ def tree_query(arguments):
     if q != 0:
         q.put(i)
     return index
-
-
-def read_observation_data_one_band(fn):
-    with rasterio.open(fn) as src:
-        ew = src.read(1)
-        # print("band 1 has shape", ew.shape)
-        ds = args.downsampling[0]
-        height, width = ew.shape
-        cols, rows = np.meshgrid(np.arange(width), np.arange(height))
-        lon_g, lat_g = rasterio.transform.xy(src.transform, rows, cols)
-        lon_g = np.array(lon_g)[::ds, ::ds]
-        lat_g = np.array(lat_g)[::ds, ::ds]
-        ew = ew[::ds, ::ds]
-        return lon_g, lat_g, ew
-
-
-def read_optical_cc_data(fn):
-    with rasterio.open(fn) as src:
-        ew = src.read(1)
-        ns = src.read(2)
-        # print("band 1 has shape", ew.shape)
-        height, width = ew.shape
-        cols, rows = np.meshgrid(np.arange(width), np.arange(height))
-        lon_g, lat_g = rasterio.transform.xy(src.transform, rows, cols)
-        ds = args.downsampling[0]
-        lon_g = np.array(lon_g)[::ds, ::ds]
-        lat_g = np.array(lat_g)[::ds, ::ds]
-        ew = ew[::ds, ::ds]
-        ns = ns[::ds, ::ds]
-    return lon_g, lat_g, ew, ns
-
-
-def RGIinterp(lon_g, lat_g, data_g, lonlat_eval):
-    f = RegularGridInterpolator(
-        (lon_g[0, :], lat_g[:, 0]), data_g.T, bounds_error=False, fill_value=np.nan
-    )
-    return f(lonlat_eval)
-
-
-def compute_LOS_displacement_SeisSol_data_from_LOS_angles(
-    lon_g, lat_g, theta_g, phi_g, lonlat_barycenter, band
-):
-    # interpolate satellite angles on the unstructured grid
-    theta_inter = RGIinterp(lon_g, lat_g, theta_g, lonlat_barycenter)
-    phi_inter = RGIinterp(lon_g, lat_g, phi_g, lonlat_barycenter)
-    # compute displacement line of sight
-    # phi azimuth, theta: range
-    if band == "azimuth":
-        D_los = U * np.sin(phi_inter) + V * np.cos(phi_inter)
-    else:
-        D_los = W * np.cos(theta_inter) + np.sin(theta_inter) * (
-            U * -np.cos(phi_inter) + V * np.sin(phi_inter)
-        )
-        # D_los = W * np.sin(theta_inter) + np.cos(theta_inter) * (U * np.cos(phi_inter) + V * np.sin(phi_inter))
-    return -D_los
-
-
-def compute_LOS_displacement_SeisSol_data_from_LOS_vector(
-    lon_g, lat_g, vx, vy, vz, lonlat_barycenter, U, V, W
-):
-    # interpolate satellite LOS on the unstructured grid
-    vx_inter = RGIinterp(lon_g, lat_g, vx, lonlat_barycenter)
-    vy_inter = RGIinterp(lon_g, lat_g, vy, lonlat_barycenter)
-    vz_inter = RGIinterp(lon_g, lat_g, vz, lonlat_barycenter)
-    D_los = U * vx_inter + V * vy_inter + W * vz_inter
-    return -D_los
-
-
-def read_seissol_surface_data(xdmfFilename):
-    """read unstructured free surface output and associated data.
-    compute cell_barycenter"""
-    sx = seissolxdmf.seissolxdmf(xdmfFilename)
-    xyz = sx.ReadGeometry()
-    connect = sx.ReadConnect()
-    U = sx.ReadData("u1", sx.ndt - 1)
-    V = sx.ReadData("u2", sx.ndt - 1)
-    W = sx.ReadData("u3", sx.ndt - 1)
-
-    # project the data to geocentric (lat, lon)
-
-    myproj = "+proj=tmerc +datum=WGS84 +k=0.9996 +lon_0=37.0 +lat_0=37.0"
-    transformer = Transformer.from_crs(myproj, "epsg:4326", always_xy=True)
-    lons, lats = transformer.transform(xyz[:, 0], xyz[:, 1])
-    xy = np.vstack((lons, lats)).T
-
-    # compute triangule barycenter
-    lonlat_barycenter = (
-        xy[connect[:, 0], :] + xy[connect[:, 1], :] + xy[connect[:, 2], :]
-    ) / 3.0
-
-    return lons, lats, lonlat_barycenter, connect, U, V, W
 
 
 def project_seissol_data_to_structured_grid(
@@ -258,22 +164,6 @@ def generate_quiver_plot(lon_g, lat_g, ew, ns, ax):
         width=0.002,
         zorder=1,
     )
-    """
-    import pandas as pd
-    df = pd.read_csv('../../ThirdParty/coseismic_offsets.txt')
-    ax.quiver(
-        df['Lon'].to_numpy(),
-        df['Lat'].to_numpy(),
-        df['de(m)'].to_numpy(),
-        df['dn(m)'].to_numpy(),
-        scale=scale,
-        angles="xy",
-        units="width",
-        color="r",
-        width=0.002,
-        zorder=1,
-    )
-    """
 
 
 parser = argparse.ArgumentParser(description="compare displacement with geodetics")
@@ -325,37 +215,18 @@ ax.append(fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree()))
 setup_map(ax[0])
 
 if args.band[0] in ["EW", "NS"]:
-    # Mathilde newest cc results
-    fn = "../../ThirdParty/Turquie_detrended_EW_NLM_destripe_wgs84.tif"
-    lon_g, lat_g, ew = read_observation_data_one_band(fn)
-    fn = "../../ThirdParty/Turquie_detrended_NS_NLM_destripe_wgs84.tif"
-    lon_g, lat_g, ns = read_observation_data_one_band(fn)
+    lon_g, lat_g, ew, ns = read_optical_cc(args.downsampling[0])
     obs_to_plot = ew if args.band[0] == "EW" else ns
 elif args.band[0] in ["azimuth", "range"]:
-    # Mathilde initial cc results
-    fn = f"../../ThirdParty/Displacement_TUR_20230114_20230207_1529_Data/20230114_HH_20230207_HH.spo_{args.band[0]}.filtered.geo.tif"
-    lon_g, lat_g, obsLOS = read_observation_data_one_band(fn)
-    obs_to_plot = obsLOS
-    fn = "../../ThirdParty/Displacement_TUR_20230114_20230207_1529_Data/20230114_HH_lv_phi.geo.tif"
-    lon_g, lat_g, phi_g = read_observation_data_one_band(fn)
-    fn = "../../ThirdParty/Displacement_TUR_20230114_20230207_1529_Data/20230114_HH_lv_theta.geo.tif"
-    lon_g, lat_g, theta_g = read_observation_data_one_band(fn)
-elif args.band[0] in ["los184", "los77"]:
-    id_los = args.band[0].split("los")[-1]
-    src = rasterio.open(
-        # f"../../ThirdParty/InSAR/{id_los}/los_ll_low_nodata_filled.tif"
-        f"../../ThirdParty/InSAR/{id_los}/los_ll_low.tif"
+    lon_g, lat_g, obs_to_plot, phi_g, theta_g = read_scansar(
+        args.band[0], args.downsampling[0]
     )
-    ds = args.downsampling[0]
-    obs_to_plot = src.read(1)[::ds, ::ds]
-    obs_to_plot[obs_to_plot == -32767] = np.nan
-    obs_to_plot = obs_to_plot / 1e2
-    fn = f"../../ThirdParty/InSAR/{id_los}/vx_ll_low.tif"
-    lon_g, lat_g, vx = read_observation_data_one_band(fn)
-    fn = f"../../ThirdParty/InSAR/{id_los}/vy_ll_low.tif"
-    lon_g, lat_g, vy = read_observation_data_one_band(fn)
-    fn = f"../../ThirdParty/InSAR/{id_los}/vz_ll_low.tif"
-    lon_g, lat_g, vz = read_observation_data_one_band(fn)
+
+elif args.band[0] in ["los184", "los77"]:
+    lon_g, lat_g, obs_to_plot, vx, vy, vz = read_insar(
+        args.band[0], args.downsampling[0]
+    )
+
 vmax = args.vmax[0]
 vmin = -vmax
 
@@ -383,7 +254,7 @@ if args.surface:
         syn_to_plot = V
     elif args.band[0] in ["azimuth", "range"]:
         syn_to_plot = compute_LOS_displacement_SeisSol_data_from_LOS_angles(
-            lon_g, lat_g, theta_g, phi_g, lonlat_barycenter, args.band[0]
+            lon_g, lat_g, theta_g, phi_g, lonlat_barycenter, args.band[0], U, V, W
         )
     if args.band[0] in ["los77", "los184"]:
         syn_to_plot = compute_LOS_displacement_SeisSol_data_from_LOS_vector(
