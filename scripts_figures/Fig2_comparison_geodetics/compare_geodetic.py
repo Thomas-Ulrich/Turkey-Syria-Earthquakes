@@ -28,7 +28,9 @@ def setup_map(ax, gridlines_left=True, draw_labels=True):
     """Setup the background map with cartopy"""
     ax.set_extent([36, 38.8, 36.0, 38.2], crs=ccrs.PlateCarree())
     scale = "10m"
-    ax.add_feature(cfeature.LAND.with_scale(scale), facecolor='whitesmoke', rasterized=True)
+    ax.add_feature(
+        cfeature.LAND.with_scale(scale), facecolor="whitesmoke", rasterized=True
+    )
     ax.add_feature(cfeature.OCEAN.with_scale(scale), rasterized=True)
     ax.add_feature(cfeature.COASTLINE.with_scale(scale))
     ax.add_feature(cfeature.BORDERS.with_scale(scale), linestyle=":")
@@ -38,7 +40,7 @@ def setup_map(ax, gridlines_left=True, draw_labels=True):
     gl.top_labels = False
     gl.left_labels = gridlines_left
     for fn in [
-        "../ThirdParty/Turkey_Emergency_EQ_Data/simple_fault_2023-02-17/simple_fault_2023-2-17.shp"
+        "../../ThirdParty/Turkey_Emergency_EQ_Data/simple_fault_2023-02-17/simple_fault_2023-2-17.shp"
     ]:
         sf = shp.Reader(fn)
         for sr in sf.shapeRecords():
@@ -90,7 +92,7 @@ def read_optical_cc_data(fn):
     return lon_g, lat_g, ew, ns
 
 
-def compute_LOS_displacement_SeisSol_data(
+def compute_LOS_displacement_SeisSol_data_from_LOS_angles(
     lon_g, lat_g, theta_g, phi_g, lonlat_barycenter, band
 ):
     # interpolate satellite angles on the unstructured grid
@@ -111,6 +113,27 @@ def compute_LOS_displacement_SeisSol_data(
             U * -np.cos(phi_inter) + V * np.sin(phi_inter)
         )
         # D_los = W * np.sin(theta_inter) + np.cos(theta_inter) * (U * np.cos(phi_inter) + V * np.sin(phi_inter))
+    return -D_los
+
+
+def compute_LOS_displacement_SeisSol_data_from_LOS_vector(
+    lon_g, lat_g, vx, vy, vz, lonlat_barycenter, U, V, W
+):
+    # interpolate satellite LOS on the unstructured grid
+    f = RegularGridInterpolator(
+        (lon_g[0, :], lat_g[:, 0]), vx.T, bounds_error=False, fill_value=np.nan
+    )
+    vx_inter = f(lonlat_barycenter)
+    f = RegularGridInterpolator(
+        (lon_g[0, :], lat_g[:, 0]), vy.T, bounds_error=False, fill_value=np.nan
+    )
+    vy_inter = f(lonlat_barycenter)
+    f = RegularGridInterpolator(
+        (lon_g[0, :], lat_g[:, 0]), vz.T, bounds_error=False, fill_value=np.nan
+    )
+    vz_inter = f(lonlat_barycenter)
+
+    D_los = U * vx_inter + V * vy_inter + W * vz_inter
     return -D_los
 
 
@@ -206,7 +229,6 @@ def generate_quiver_plot(lon_g, lat_g, ew, ns, ax):
     yg = lat_g[::nDownSample, ::nDownSample]
 
     if args.surface:
-
         U1 = project_seissol_data_to_structured_grid(
             xg, yg, lonlat_barycenter, connect, U
         )
@@ -247,7 +269,7 @@ def generate_quiver_plot(lon_g, lat_g, ew, ns, ax):
     )
     """
     import pandas as pd
-    df = pd.read_csv('../ThirdParty/coseismic_offsets.txt')
+    df = pd.read_csv('../../ThirdParty/coseismic_offsets.txt')
     ax.quiver(
         df['Lon'].to_numpy(),
         df['Lat'].to_numpy(),
@@ -280,7 +302,7 @@ parser.add_argument(
     nargs=1,
     default=(["EW"]),
     help="EW, NS, azimuth or range",
-    choices=["EW", "NS", "azimuth", "range"],
+    choices=["EW", "NS", "azimuth", "range", "los77", "los184"],
 )
 parser.add_argument(
     "--noVector",
@@ -313,21 +335,36 @@ setup_map(ax[0])
 
 if args.band[0] in ["EW", "NS"]:
     # Mathilde newest cc results
-    fn = "../ThirdParty/Turquie_detrended_EW_NLM_destripe_wgs84.tif"
+    fn = "../../ThirdParty/Turquie_detrended_EW_NLM_destripe_wgs84.tif"
     lon_g, lat_g, ew = read_observation_data_one_band(fn)
-    fn = "../ThirdParty/Turquie_detrended_NS_NLM_destripe_wgs84.tif"
+    fn = "../../ThirdParty/Turquie_detrended_NS_NLM_destripe_wgs84.tif"
     lon_g, lat_g, ns = read_observation_data_one_band(fn)
     obs_to_plot = ew if args.band[0] == "EW" else ns
 elif args.band[0] in ["azimuth", "range"]:
     # Mathilde initial cc results
-    fn = f"../ThirdParty/Displacement_TUR_20230114_20230207_1529_Data/20230114_HH_20230207_HH.spo_{args.band[0]}.filtered.geo.tif"
+    fn = f"../../ThirdParty/Displacement_TUR_20230114_20230207_1529_Data/20230114_HH_20230207_HH.spo_{args.band[0]}.filtered.geo.tif"
     lon_g, lat_g, obsLOS = read_observation_data_one_band(fn)
     obs_to_plot = obsLOS
-    fn = "../ThirdParty/Displacement_TUR_20230114_20230207_1529_Data/20230114_HH_lv_phi.geo.tif"
+    fn = "../../ThirdParty/Displacement_TUR_20230114_20230207_1529_Data/20230114_HH_lv_phi.geo.tif"
     lon_g, lat_g, phi_g = read_observation_data_one_band(fn)
-    fn = "../ThirdParty/Displacement_TUR_20230114_20230207_1529_Data/20230114_HH_lv_theta.geo.tif"
+    fn = "../../ThirdParty/Displacement_TUR_20230114_20230207_1529_Data/20230114_HH_lv_theta.geo.tif"
     lon_g, lat_g, theta_g = read_observation_data_one_band(fn)
-
+elif args.band[0] in ["los184", "los77"]:
+    id_los = args.band[0].split("los")[-1]
+    src = rasterio.open(
+        # f"../../ThirdParty/InSAR/{id_los}/los_ll_low_nodata_filled.tif"
+        f"../../ThirdParty/InSAR/{id_los}/los_ll_low.tif"
+    )
+    ds = args.downsampling[0]
+    obs_to_plot = src.read(1)[::ds, ::ds]
+    obs_to_plot[obs_to_plot == -32767] = np.nan
+    obs_to_plot = obs_to_plot / 1e2
+    fn = f"../../ThirdParty/InSAR/{id_los}/vx_ll_low.tif"
+    lon_g, lat_g, vx = read_observation_data_one_band(fn)
+    fn = f"../../ThirdParty/InSAR/{id_los}/vy_ll_low.tif"
+    lon_g, lat_g, vy = read_observation_data_one_band(fn)
+    fn = f"../../ThirdParty/InSAR/{id_los}/vz_ll_low.tif"
+    lon_g, lat_g, vz = read_observation_data_one_band(fn)
 vmax = args.vmax[0]
 vmin = -vmax
 
@@ -354,9 +391,22 @@ if args.surface:
     elif args.band[0] == "NS":
         syn_to_plot = V
     elif args.band[0] in ["azimuth", "range"]:
-        syn_to_plot = compute_LOS_displacement_SeisSol_data(
+        syn_to_plot = compute_LOS_displacement_SeisSol_data_from_LOS_angles(
             lon_g, lat_g, theta_g, phi_g, lonlat_barycenter, args.band[0]
         )
+    if args.band[0] in ["los77", "los184"]:
+        syn_to_plot = compute_LOS_displacement_SeisSol_data_from_LOS_vector(
+            lon_g,
+            lat_g,
+            vx,
+            vy,
+            vz,
+            lonlat_barycenter,
+            U,
+            V,
+            W,
+        )
+        # syn_to_plot = np.reshape(syn_to_plot, (np.max(np.shape(vx)), np.min(np.shape(vx))))
 
     if args.diff:
         # interpolate satellite displacement on the unstructured grid
