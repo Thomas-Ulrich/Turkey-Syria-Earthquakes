@@ -65,7 +65,7 @@ def tree_query(arguments):
 def read_observation_data_one_band(fn):
     with rasterio.open(fn) as src:
         ew = src.read(1)
-        print("band 1 has shape", ew.shape)
+        # print("band 1 has shape", ew.shape)
         ds = args.downsampling[0]
         height, width = ew.shape
         cols, rows = np.meshgrid(np.arange(width), np.arange(height))
@@ -80,7 +80,7 @@ def read_optical_cc_data(fn):
     with rasterio.open(fn) as src:
         ew = src.read(1)
         ns = src.read(2)
-        print("band 1 has shape", ew.shape)
+        # print("band 1 has shape", ew.shape)
         height, width = ew.shape
         cols, rows = np.meshgrid(np.arange(width), np.arange(height))
         lon_g, lat_g = rasterio.transform.xy(src.transform, rows, cols)
@@ -92,18 +92,19 @@ def read_optical_cc_data(fn):
     return lon_g, lat_g, ew, ns
 
 
+def RGIinterp(lon_g, lat_g, data_g, lonlat_eval):
+    f = RegularGridInterpolator(
+        (lon_g[0, :], lat_g[:, 0]), data_g.T, bounds_error=False, fill_value=np.nan
+    )
+    return f(lonlat_eval)
+
+
 def compute_LOS_displacement_SeisSol_data_from_LOS_angles(
     lon_g, lat_g, theta_g, phi_g, lonlat_barycenter, band
 ):
     # interpolate satellite angles on the unstructured grid
-    f = RegularGridInterpolator(
-        (lon_g[0, :], lat_g[:, 0]), theta_g.T, bounds_error=False, fill_value=np.nan
-    )
-    theta_inter = f(lonlat_barycenter)
-    g = RegularGridInterpolator(
-        (lon_g[0, :], lat_g[:, 0]), phi_g.T, bounds_error=False, fill_value=np.nan
-    )
-    phi_inter = g(lonlat_barycenter)
+    theta_inter = RGIinterp(lon_g, lat_g, theta_g, lonlat_barycenter)
+    phi_inter = RGIinterp(lon_g, lat_g, phi_g, lonlat_barycenter)
     # compute displacement line of sight
     # phi azimuth, theta: range
     if band == "azimuth":
@@ -120,19 +121,9 @@ def compute_LOS_displacement_SeisSol_data_from_LOS_vector(
     lon_g, lat_g, vx, vy, vz, lonlat_barycenter, U, V, W
 ):
     # interpolate satellite LOS on the unstructured grid
-    f = RegularGridInterpolator(
-        (lon_g[0, :], lat_g[:, 0]), vx.T, bounds_error=False, fill_value=np.nan
-    )
-    vx_inter = f(lonlat_barycenter)
-    f = RegularGridInterpolator(
-        (lon_g[0, :], lat_g[:, 0]), vy.T, bounds_error=False, fill_value=np.nan
-    )
-    vy_inter = f(lonlat_barycenter)
-    f = RegularGridInterpolator(
-        (lon_g[0, :], lat_g[:, 0]), vz.T, bounds_error=False, fill_value=np.nan
-    )
-    vz_inter = f(lonlat_barycenter)
-
+    vx_inter = RGIinterp(lon_g, lat_g, vx, lonlat_barycenter)
+    vy_inter = RGIinterp(lon_g, lat_g, vy, lonlat_barycenter)
+    vz_inter = RGIinterp(lon_g, lat_g, vz, lonlat_barycenter)
     D_los = U * vx_inter + V * vy_inter + W * vz_inter
     return -D_los
 
@@ -410,19 +401,14 @@ if args.surface:
 
     if args.diff:
         # interpolate satellite displacement on the unstructured grid
-
-        f = RegularGridInterpolator(
-            (lon_g[0, :], lat_g[:, 0]),
-            obs_to_plot.T,
-            bounds_error=False,
-            fill_value=np.nan,
-        )
+        obs_inter = RGIinterp(lon_g, lat_g, obs_to_plot, lonlat_barycenter)
+        print(args.band[0], np.nanstd(syn_to_plot - obs_inter))
 
     ax[1].tripcolor(
         lons,
         lats,
         connect,
-        facecolors=syn_to_plot - f(lonlat_barycenter) if args.diff else syn_to_plot,
+        facecolors=syn_to_plot - obs_inter if args.diff else syn_to_plot,
         cmap=cm.vik,
         rasterized=True,
         vmin=-vmax,
