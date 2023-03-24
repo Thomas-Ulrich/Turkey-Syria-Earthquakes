@@ -78,10 +78,10 @@ plt.rc("font", family="FreeSans", size=12)
 # plt.rcParams["text.usetex"] = True
 
 if args.event[0] == 1:
-    fn = "../ThirdParty/offset_sentinel2.txt"
+    fn = "../../ThirdParty/offset_sentinel2.txt"
     event = "mainshock"
 else:
-    fn = "../ThirdParty/EW_offset_sentinel2_Mw75.txt"
+    fn = "../../ThirdParty/EW_offset_sentinel2_Mw75.txt"
     event = "2nd"
 
 df = pd.read_csv(fn, sep=" ")
@@ -111,32 +111,22 @@ lw = 0.5
 if args.event[0] == 1:
     plt.errorbar(
         acc_dist,
-        df["ns"],
-        yerr=df["ens"],
+        df["ns_offset"],
+        yerr=df["ns_error"],
         color="b",
         linestyle="--",
         linewidth=lw,
         label="NS from Sentinel 2",
     )
-    plt.errorbar(
-        acc_dist,
-        df["ew"],
-        yerr=df["eew"],
-        color="orange",
-        linestyle="--",
-        linewidth=lw,
-        label="EW from Sentinel 2",
-    )
-else:
-    plt.errorbar(
-        acc_dist,
-        df["ew_offset"],
-        yerr=df["ew_error"],
-        color="orange",
-        linestyle="--",
-        linewidth=lw,
-        label="EW from Sentinel 2",
-    )
+plt.errorbar(
+    acc_dist,
+    df["ew_offset"],
+    yerr=df["ew_error"],
+    color="orange",
+    linestyle="--",
+    linewidth=lw,
+    label="EW from Sentinel 2",
+)
 
 for i, fn in enumerate(args.fault):
     sx = seissolxdmfExtended(fn)
@@ -164,6 +154,21 @@ for i, fn in enumerate(args.fault):
     plt.plot(
         acc_dist, ew, "orange", linewidth=lw * (1 + 0.5 * i), label="EW synthetics"
     )
+    if args.event[0] == 1:
+        ids = df["ns_offset"].notna()
+        Chi2_ns = np.sum(
+            (ns[ids] - df["ns_offset"][ids].to_numpy()) ** 2
+            / df["ns_error"][ids].to_numpy() ** 2
+        )
+    else:
+        Chi2_ns = 0.0
+    ids = df["ew_offset"].notna()
+    Chi2_ew = np.sum(
+        (ew[ids] - df["ew_offset"][ids].to_numpy()) ** 2
+        / df["ew_error"][ids].to_numpy() ** 2
+    )
+    Chi = Chi2_ew + Chi2_ns
+    print(f"{fn}: (Chi2 Chi2_ew Chi2_ns) = {Chi} {Chi2_ew} {Chi2_ns}")
 
 if args.event[0] == 1:
     ax.legend(frameon=False, ncol=2, bbox_to_anchor=(0.1, 1.05), loc="center left")
