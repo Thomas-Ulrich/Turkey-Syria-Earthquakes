@@ -6,10 +6,6 @@ import os
 from pyproj import Transformer
 import matplotlib.pyplot as plt
 import groundMotionRoutines as gmr
-from readStrongMotionNepal import (
-    create_stream_from_raw_ascii_file_Nepal,
-    create_stream_from_processed_sac_Nepal,
-)
 import numpy as np
 from obspy import read
 import matplotlib
@@ -93,11 +89,11 @@ t1 = UTCDateTime(2023, 2, 6, 10, 24, 47.0)
 t2 = t1 + 250
 tplot_max = 100.0
 
-pathObservations = "../ThirdParty/strongMotionData_2nd"
+pathObservations = "../../ThirdParty/strongMotionData_2nd"
 use_filter = True
 # use_filter=False
 
-RawStationFile = "../ThirdParty/stations.csv"
+RawStationFile = "../../ThirdParty/stations.csv"
 
 
 stations2plot = [
@@ -115,11 +111,10 @@ figall, axarr = InitializeSeveralStationsFigure(
 )
 
 lFolderprefix = [
-    "/home/ulrich/trash/receiversTS23/trash",
-    "/home/ulrich/trash/receiversTS23/Turkey78_segmented_usgs_with75_26mio_o5",
+    "/home/ulrich/trash/receiversTS23/test1_180_subshear",
+    "/home/ulrich/trash/receiversTS23/test1_180_nu05_083",
 ]
-
-lFolderprefix = ["/home/ulrich/trash/receiversTS23/test1_180_subshear"]
+t0_2nd = [100, 80]
 
 use_filter = True
 plot_spectras = False
@@ -203,7 +198,7 @@ for i, station in enumerate(stations2plot):
             tplot_max = np.amax(synth[0, :])
             print(station, xyzs)
             syn_str = gmr.CreateObspyTraceFromSeissolSeismogram(
-                station, variablelist, synth, t1 - 100.0
+                station, variablelist, synth, t1 - t0_2nd[idsyn]
             )
             aSt_syn.append(syn_str)
         except KeyError:

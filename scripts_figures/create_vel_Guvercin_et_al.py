@@ -47,7 +47,9 @@ aData = np.zeros((nrows, 4))
 for i, row in enumerate(a):
     depth, vp, vs = row
     vs, rho, mu, lambdax = vsrhomulambda(vp, vs)
-    print(-depth*1e3, mu)
+
+    print(f"{depth} & {rho:.1f} & {vs} & {vp} \\\\")
+    #print(-depth*1e3, mu)
     aData[i,:] = -depth*1e3, rho, mu, lambdax
     towrite += f"      {-depth*1000}: [{rho}, {mu}, {lambdax}, {mu*0.0004}]\n"
 

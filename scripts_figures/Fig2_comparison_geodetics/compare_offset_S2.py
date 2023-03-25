@@ -173,6 +173,8 @@ for i, fn in enumerate(args.fault):
 if args.event[0] == 1:
     ax.legend(frameon=False, ncol=2, bbox_to_anchor=(0.1, 1.05), loc="center left")
 
-fn = f"comparison_offset_{event}.svg"
+if not os.path.exists("output"):
+    os.makedirs("output")
+fn = f"output/comparison_offset_{event}.svg"
 plt.savefig(fn, dpi=200)
 print(f"done writing {fn}")

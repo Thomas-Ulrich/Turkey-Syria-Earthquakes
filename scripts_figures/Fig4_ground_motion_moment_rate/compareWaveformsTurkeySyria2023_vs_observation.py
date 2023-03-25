@@ -6,10 +6,6 @@ import os
 from pyproj import Transformer
 import matplotlib.pyplot as plt
 import groundMotionRoutines as gmr
-from readStrongMotionNepal import (
-    create_stream_from_raw_ascii_file_Nepal,
-    create_stream_from_processed_sac_Nepal,
-)
 import numpy as np
 from obspy import read
 import matplotlib
@@ -94,11 +90,11 @@ t1 = UTCDateTime(2023, 2, 6, 1, 17, 35.0)
 t2 = t1 + 250
 tplot_max = 100.0
 
-pathObservations = "../ThirdParty/strongMotionData_mainshock"
+pathObservations = "../../ThirdParty/strongMotionData_mainshock"
 use_filter = True
 # use_filter=False
 
-RawStationFile = "../ThirdParty/stations.csv"
+RawStationFile = "../../ThirdParty/stations.csv"
 
 
 stations2plot = [
@@ -123,7 +119,10 @@ figall, axarr = InitializeSeveralStationsFigure(
     len(stations2plot), ncol_per_component, directions
 )
 
-lFolderprefix = ["/home/ulrich/trash/receiversTS23/test1_180_subshear"]
+lFolderprefix = [
+    "/home/ulrich/trash/receiversTS23/test1_180_subshear",
+    "/home/ulrich/trash/receiversTS23/test1_180_nu05_083",
+]
 
 use_filter = True
 plot_spectras = False
