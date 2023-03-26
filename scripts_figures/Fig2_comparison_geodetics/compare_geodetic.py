@@ -23,7 +23,12 @@ matplotlib.rc("ytick", labelsize=ps)
 
 def setup_map(ax, gridlines_left=True, draw_labels=True):
     """Setup the background map with cartopy"""
-    ax.set_extent([36, 38.8, 36.0, 38.4], crs=ccrs.PlateCarree())
+    if args.band[0] in ["azimuth", "range"]:
+        extentmap = [36.6, 38.4, 36.7, 38.2]
+    else:
+        extentmap = [36, 38.8, 36.0, 38.6]
+
+    ax.set_extent(extentmap, crs=ccrs.PlateCarree())
     scale = "10m"
     ax.add_feature(
         cfeature.LAND.with_scale(scale), facecolor="whitesmoke", rasterized=True
@@ -291,12 +296,12 @@ if not args.noVector and args.band[0] in ["EW", "NS"]:
 # Add colorbar
 # left, bottom, width, height
 cbaxes = fig.add_axes([0.92, 0.25, 0.01, 0.25])
-fig.colorbar(c, ax=ax[-1], cax=cbaxes)
+clb = fig.colorbar(c, ax=ax[-1], cax=cbaxes, ticks=[vmin, 0, vmax])
+clb.ax.set_title(f"{args.band[0]} (m)", loc="left")
+
 
 if not os.path.exists("output"):
     os.makedirs("output")
-plt.title(args.band[0])
 fn = f"output/comparison_geodetic_{args.band[0]}.{args.extension[0]}"
-plt.savefig(fn, dpi=100, bbox_inches="tight")
+plt.savefig(fn, dpi=150, bbox_inches="tight")
 print(f"done writing {fn}")
-# plt.show()

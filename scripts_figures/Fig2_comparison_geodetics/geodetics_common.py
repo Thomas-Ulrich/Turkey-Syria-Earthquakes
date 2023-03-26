@@ -63,6 +63,7 @@ def read_scansar(band, downsampling):
     lon_g, lat_g, phi_g = read_observation_data_one_band(fn, downsampling)
     fn = "../../ThirdParty/Displacement_TUR_20230114_20230207_1529_Data/20230114_HH_lv_theta.geo.tif"
     lon_g, lat_g, theta_g = read_observation_data_one_band(fn, downsampling)
+    obsLOS[obsLOS == 0.0] = np.nan
     return lon_g, lat_g, obsLOS, phi_g, theta_g
 
 
