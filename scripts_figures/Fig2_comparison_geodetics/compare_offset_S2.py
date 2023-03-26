@@ -6,6 +6,7 @@ import trimesh
 import seissolxdmf
 import argparse
 from scipy import spatial
+import os
 
 
 class seissolxdmfExtended(seissolxdmf.seissolxdmf):
@@ -73,7 +74,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-plt.rc("font", family="FreeSans", size=12)
+plt.rc("font", family="FreeSans", size=8)
 # plt.rc("font", size=8)
 # plt.rcParams["text.usetex"] = True
 
@@ -101,31 +102,47 @@ trace_nodes = get_fault_trace()[:: args.downsample[0]]
 fig = plt.figure(figsize=(5.5, 3.0))
 ax = fig.add_subplot(111)
 ax.set_xlabel("distance along strike (km)")
-ax.set_ylabel("fault offset (m)")
+ax.set_ylabel("fault offsets (m)")
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.get_xaxis().tick_bottom()
 ax.get_yaxis().tick_left()
 
-lw = 0.5
+lw = 0.8
 if args.event[0] == 1:
-    plt.errorbar(
+    ax.errorbar(
         acc_dist,
         df["ns_offset"],
         yerr=df["ns_error"],
-        color="b",
-        linestyle="--",
-        linewidth=lw,
-        label="NS from Sentinel 2",
+        color="royalblue",
+        linestyle="-",
+        linewidth=lw / 2.0,
+        label="Sentinel 2 NS offset",
+        marker="o",
+        markersize=2,
     )
-plt.errorbar(
+else:
+    ax.errorbar(
+        np.nan,
+        np.nan,
+        yerr=np.nan,
+        color="royalblue",
+        linestyle="-",
+        linewidth=lw / 2.0,
+        label="Sentinel 2 NS offset",
+        marker="o",
+        markersize=2,
+    )
+ax.errorbar(
     acc_dist,
     df["ew_offset"],
     yerr=df["ew_error"],
     color="orange",
-    linestyle="--",
-    linewidth=lw,
-    label="EW from Sentinel 2",
+    linestyle="-",
+    linewidth=lw / 2.0,
+    label="Sentinel 2 EW offset",
+    marker="o",
+    markersize=2,
 )
 
 for i, fn in enumerate(args.fault):
@@ -150,9 +167,28 @@ for i, fn in enumerate(args.fault):
     ew = np.abs(slip_at_trace * strike[:, 0])
     ns = np.abs(slip_at_trace * strike[:, 1])
 
-    plt.plot(acc_dist, ns, "b", linewidth=lw * (1 + 0.5 * i), label="NS synthetics")
-    plt.plot(
-        acc_dist, ew, "orange", linewidth=lw * (1 + 0.5 * i), label="EW synthetics"
+    if args.event[0] == 1:
+        ax.plot(
+            acc_dist,
+            ns,
+            "royalblue",
+            linewidth=lw * (1 + 0.5 * i),
+            label="Predicted NS offset",
+        )
+    else:
+        ax.plot(
+            np.nan,
+            np.nan,
+            "royalblue",
+            linewidth=lw * (1 + 0.5 * i),
+            label="Predicted NS offset",
+        )
+    ax.plot(
+        acc_dist,
+        ew,
+        "orange",
+        linewidth=lw * (1 + 0.5 * i),
+        label="Predicted EW offset",
     )
     if args.event[0] == 1:
         ids = df["ns_offset"].notna()
@@ -170,11 +206,11 @@ for i, fn in enumerate(args.fault):
     Chi = Chi2_ew + Chi2_ns
     print(f"{fn}: (Chi2 Chi2_ew Chi2_ns) = {Chi} {Chi2_ew} {Chi2_ns}")
 
-if args.event[0] == 1:
-    ax.legend(frameon=False, ncol=2, bbox_to_anchor=(0.1, 1.05), loc="center left")
+if args.event[0] == 2:
+    ax.legend(frameon=False, loc="lower center")
 
 if not os.path.exists("output"):
     os.makedirs("output")
 fn = f"output/comparison_offset_{event}.svg"
-plt.savefig(fn, dpi=200)
+plt.savefig(fn, dpi=200, bbox_inches="tight")
 print(f"done writing {fn}")

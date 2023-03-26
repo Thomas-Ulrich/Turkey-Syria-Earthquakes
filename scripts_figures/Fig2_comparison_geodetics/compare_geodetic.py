@@ -296,7 +296,8 @@ if not args.noVector and args.band[0] in ["EW", "NS"]:
 # Add colorbar
 # left, bottom, width, height
 cbaxes = fig.add_axes([0.92, 0.25, 0.01, 0.25])
-clb = fig.colorbar(c, ax=ax[-1], cax=cbaxes, ticks=[vmin, 0, vmax])
+xticks = [-4, -2, 0, 2, 4] if vmax == 4.0 else [vmin, 0, vmax]
+clb = fig.colorbar(c, ax=ax[-1], cax=cbaxes, ticks=xticks)
 clb.ax.set_title(f"{args.band[0]} (m)", loc="left")
 
 
