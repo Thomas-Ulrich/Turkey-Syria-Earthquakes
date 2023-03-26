@@ -233,11 +233,14 @@ def PlotComparisonStationXYZ(
         for it, myTrace in enumerate(lTrace):
             if np.amax(myTrace.select(component=comp)[0].data) == 0.0:
                 continue
+            my_time = myTrace.select(component=comp)[0].times(reftime=starttime)
+            y = myTrace.select(component=comp)[0].data
             ax.plot(
-                myTrace.select(component=comp)[0].times(reftime=starttime),
-                myTrace.select(component=comp)[0].data,
+                my_time,
+                y,
                 lColors[it],
             )
+            ax.set_xlim(0.0, my_time[-1])
         if dispLabel:
             ax.set_ylabel("D%s (m)" % xyz[j])
         else:
@@ -246,8 +249,7 @@ def PlotComparisonStationXYZ(
     ax1.set_title(station)
     ax3.set_xlabel("time")
     fig0.set_size_inches(18.5, 10.5)
-    time = lTrace[-1][0].times(reftime=starttime)
-    ax1.set_xlim(time[0], time[-1])
+
     plt.savefig(fplotname, bbox_inches="tight")
     # plt.show()
     plt.close()

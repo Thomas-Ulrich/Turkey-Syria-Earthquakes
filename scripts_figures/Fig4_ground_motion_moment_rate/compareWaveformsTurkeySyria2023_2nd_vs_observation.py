@@ -100,6 +100,7 @@ stations2plot = [
     "4612",
     "4628",
     "4611",
+    "4616",
     "0213",
     "4406",
 ]
@@ -114,7 +115,13 @@ lFolderprefix = [
     "/home/ulrich/trash/receiversTS23/test1_180_subshear",
     "/home/ulrich/trash/receiversTS23/test1_180_nu05_083",
 ]
-t0_2nd = [100, 80]
+
+lFolderprefix = [
+    "/home/ulrich/trash/receiversTS23/test1_180_nu05_083_062",
+    "/home/ulrich/trash/receiversTS23/test1_180_nu05_083_062_2nd",
+]
+
+t0_2nd = [100, 0]
 
 use_filter = True
 plot_spectras = False
@@ -194,6 +201,7 @@ for i, station in enumerate(stations2plot):
             xyzs, variablelist, synth = gmr.ReadSeisSolSeismogram(
                 lFolderprefix[idsyn], idStation
             )
+            synth = synth[synth[:, 0] > t0_2nd[idsyn]]
             lonlatdepth = transformer.transform(xyzs[0], xyzs[1], xyzs[2])
             tplot_max = np.amax(synth[0, :])
             print(station, xyzs)
@@ -245,7 +253,6 @@ for i, station in enumerate(stations2plot):
         filterdesc = "NoFilter"
     fplotname = f"{plotdir}/%s_%s_2nd.{ext}" % (station, filterdesc)
     gmr.PlotComparisonStationXYZ(station, lTrace, lColors, fplotname, t1)
-
     # plot all stations on same plot
     shift = 0
     for j, comp in enumerate(components):
