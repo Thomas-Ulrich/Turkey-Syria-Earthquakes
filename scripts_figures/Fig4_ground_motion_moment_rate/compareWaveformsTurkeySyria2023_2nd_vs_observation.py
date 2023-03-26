@@ -206,7 +206,7 @@ for i, station in enumerate(stations2plot):
             tplot_max = np.amax(synth[0, :])
             print(station, xyzs)
             syn_str = gmr.CreateObspyTraceFromSeissolSeismogram(
-                station, variablelist, synth, t1 - t0_2nd[idsyn]
+                station, variablelist, synth, t1
             )
             aSt_syn.append(syn_str)
         except KeyError:
