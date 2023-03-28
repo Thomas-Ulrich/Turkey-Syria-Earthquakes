@@ -85,7 +85,8 @@ def findStationFromCoordsInRawFile(StationFile, lonlatdepth, stations2plot=[]):
     if ext == ".csv":
         import pandas as pd
 
-        cols = ["Code", "Longitude", "Latitude"]
+        # cols = ["Code", "Longitude", "Latitude"]
+        cols = ["codes", "lons", "lats"]
         stationInfo = pd.read_csv(StationFile)[cols].to_numpy()
     else:
         stationInfo = np.genfromtxt(StationFile, dtype="str", delimiter=" ")
@@ -362,3 +363,37 @@ def removeTopRightAxis(ax):
     ax.spines["right"].set_visible(False)
     ax.get_xaxis().tick_bottom()
     ax.get_yaxis().tick_left()
+
+
+def compileInvLUTGM(
+    folderprefix,
+    idlist,
+    transformer,
+    stations2plot=[],
+    inventory=None,
+    RawStationFile=None,
+):
+    print("compiling lookup table...")
+    StationLookUpTable = {}
+    id_not_found = []
+    for i, idStation in enumerate(idlist):
+        # Load SeisSol and obspy traces
+        xyzs = ReadSeisSolSeismogram(folderprefix, idStation, coords_only=True)
+        if not xyzs:
+            id_not_found.append(idStation)
+            continue
+        lonlatdepth = transformer.transform(xyzs[0], xyzs[1], xyzs[2])
+        station = False
+        if inventory:
+            station = findStationFromInventory(inventory, lonlatdepth)
+        if not station:
+            station = findStationFromCoordsInRawFile(
+                RawStationFile, lonlatdepth, stations2plot
+            )
+        if station:
+            StationLookUpTable[idStation] = station
+    if id_not_found:
+        print(f"no SeisSol receiver with id {id_not_found}")
+    print(StationLookUpTable)
+    invStationLookUpTable = {v: k for k, v in StationLookUpTable.items()}
+    return invStationLookUpTable

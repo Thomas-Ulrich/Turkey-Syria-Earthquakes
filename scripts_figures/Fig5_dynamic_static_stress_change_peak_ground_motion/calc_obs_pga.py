@@ -10,6 +10,8 @@ with Thomas)
 import numpy as np
 import pandas as pd
 from obspy import read, UTCDateTime
+import groundMotionRoutines as gmr
+import gme
 
 
 # Stations that had obvious data problems
@@ -28,7 +30,7 @@ for evid in ['us6000jllz', 'us6000jlqa']:
     t0 = org_times[evid]
 
     print('Reading the strong motion data for %s' % evid)
-    st = read('../strong_motion_data/processed/%s/*.mseed' % evid)
+    st = read('../../ThirdParty/strong_motion_data/processed/%s/*.mseed' % evid)
     for bad in badlist[evid]:
         rm = st.select(station=bad)
         for tr in rm:
@@ -38,27 +40,25 @@ for evid in ['us6000jllz', 'us6000jlqa']:
     st_e = st.select(channel='E')
     st_n = st.select(channel='E')
 
-    df = pd.read_csv('../stations.csv')
+    df = pd.read_csv('../../ThirdParty/stations.csv')
     lats = []
     lons = []
     codes = []
     for tr in st_e:
         sta = tr.stats.station
-        lats.append(float(df[df.Code == sta].Latitude))
-        lons.append(float(df[df.Code == sta].Longitude))
+        lats.append(float(df[df.codes == sta].lats))
+        lons.append(float(df[df.codes == sta].lons))
         codes.append(sta)
 
     print('Computing the PGAs')
     times, pgas = [], []
+    print(len(st_e))
+    i=0
     for tr_e, tr_n in zip(st_e, st_n):
-        if abs(tr_n.data).max() > abs(tr_e.data).max():
-            tr_l = tr_n
-        else:
-            tr_l = tr_e
-        pgas.append(abs(tr_l.data).max())
-        times.append(
-            tr_l.stats.starttime + tr_l.stats.delta * np.argmax(
-                abs(tr_l.data)) - t0)
+        print(i, end=" ")
+        pgas.append(gme.compute_gmrotdpp_PGA(tr_n, tr_e))
+        times.append(0.0)
+        i=i+1
 
     idx = np.argsort(times)
     pgas = np.array(pgas)[idx]
