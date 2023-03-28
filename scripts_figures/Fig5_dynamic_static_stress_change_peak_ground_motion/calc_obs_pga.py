@@ -36,9 +36,9 @@ for evid in ['us6000jllz', 'us6000jlqa']:
         for tr in rm:
             st.remove(tr)
 
-    st.trim(starttime=t0, endtime=t0 + 120)
+    st.trim(starttime=t0, endtime=t0 + 150)
     st_e = st.select(channel='E')
-    st_n = st.select(channel='E')
+    st_n = st.select(channel='N')
 
     df = pd.read_csv('../../ThirdParty/stations.csv')
     lats = []
