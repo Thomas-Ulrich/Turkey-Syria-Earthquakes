@@ -64,8 +64,8 @@ def read_seissol_surface_data(xdmfFilename,event):
         W = sx.ReadData("u3", 0)
     elif event == 2:
         U = sx.ReadData("u1", 1) - sx.ReadData("u1", 0)
-        V = sx.ReadData("u2", 1) - sx.ReadData("u1", 0)
-        W = sx.ReadData("u3", 1) - sx.ReadData("u1", 0)
+        V = sx.ReadData("u2", 1) - sx.ReadData("u2", 0)
+        W = sx.ReadData("u3", 1) - sx.ReadData("u3", 0)
     # project the data to geocentric (lat, lon)
 
     myproj = "+proj=tmerc +datum=WGS84 +k=0.9996 +lon_0=37.0 +lat_0=37.0"
