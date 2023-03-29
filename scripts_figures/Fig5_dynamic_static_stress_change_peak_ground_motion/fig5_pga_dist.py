@@ -48,25 +48,13 @@ fig2, axes2 = plt.subplots(nrows=1, ncols=2, figsize=(7.5, 3.5), sharey=True)
 
 # Loop over observations and simulations
 for type in ["obs", "syn"]:
-    df_pga_m78 = pd.read_csv("%s_us6000jllz.csv" % type, dtype={"codes": str})
-    df_pga_m77 = pd.read_csv("%s_us6000jlqa.csv" % type, dtype={"codes": str})
-    df = df_pga_m78.merge(
-        df_pga_m77, on="codes", suffixes=("_%s" % evids[0], "_%s" % evids[1])
-    )
-    if type == "obs":
-        df.to_csv("obs_merged.csv", index=False)
-    else:
-        df_obs = pd.read_csv("obs_merged.csv", dtype={"codes": str})
-        df = df.merge(df_obs, on="codes", suffixes=("", "obs"))
-
-    print(df)
-    stalats = np.array(df["lats_%s" % evids[0]])
-    stalons = np.array(df["lons_%s" % evids[0]])
-    print(type, stalats.shape)
-    stadeps = np.full_like(stalats, 0.0)
-
     # Loop over both events
-    for i in range(2):
+    for i, evid in enumerate(["us6000jllz", "us6000jlqa"]):
+        df = pd.read_csv(f"{type}_{evid}.csv", dtype={"codes": str})
+        stalats = np.array(df["lats"])
+        stalons = np.array(df["lons"])
+        stadeps = np.full_like(stalats, 0.0)
+
         # Create shakemap origin
         ev = {
             "id": evids[i],
@@ -91,7 +79,7 @@ for type in ["obs", "syn"]:
 
         # Compute JB distances
         df["dists"] = rup.computeRjb(stalats, stalons, stadeps)[0]
-        print(type, df[df.dists < 3])
+        df = df[df.dists < 250.0]
         dx = DistancesContext()
         dx.rjb = np.linspace(1, 1000, 1000)
 
@@ -120,12 +108,12 @@ for type in ["obs", "syn"]:
         sx.vs30 = np.full_like(dx.rjb, vs30)
         pred = 100 * np.exp(gmpe.get_mean_and_stddevs(sx, rx, dx, imt, [])[0])
         if type == "obs":
-            obs = df["pgas_%s" % evids[i]] / 9.81
+            obs = df["pgas"] / 9.81
             color = OBS_COLOR
             marker = OBS_MARKER
             label = "Observed data"
         else:
-            obs = 100 * df["pgas_%s" % evids[i]] / 9.81
+            obs = 100 * df["pgas"] / 9.81
             color = SIM_COLOR
             marker = SIM_MARKER
             label = "Simulated data"
@@ -257,5 +245,5 @@ handles, labels = axes1[0].get_legend_handles_labels()
 axes1[0].legend(handles, labels, loc="lower left", fontsize=9)
 fig1.tight_layout()
 fig2.tight_layout()
-fig1.savefig("output/pga_dist.png", bbox_inches="tight", dpi=300)
-fig2.savefig("output/resid_dist.png", bbox_inches="tight", dpi=300)
+fig1.savefig("output/pga_dist.pdf", bbox_inches="tight", dpi=300)
+fig2.savefig("output/resid_dist.pdf", bbox_inches="tight", dpi=300)
