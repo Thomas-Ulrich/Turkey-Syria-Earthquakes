@@ -16,6 +16,14 @@ parser = argparse.ArgumentParser(
     description="compute synthetic PGAs from SeisSol ascii receivers"
 )
 parser.add_argument("folderPrefix", help="folder and output prefix")
+parser.add_argument(
+    "--PGA_from_max_component",
+    dest="PGA_from_max_component",
+    default=False,
+    action="store_true",
+    help="compute PGA from the max of each component and not gmrot(geometric mean)",
+)
+
 args = parser.parse_args()
 
 SPROJ = "+proj=tmerc +datum=WGS84 +k=0.9996 +lon_0=37.0 +lat_0=37.0"
@@ -43,7 +51,7 @@ lonmax = 40
 latmin = 35
 latmax = 39
 
-use_gmrot = True
+use_gmrot = not args.PGA_from_max_component
 
 # Time that the 1st event ends and the 2nd event begins
 time_split = 150
