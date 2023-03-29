@@ -51,6 +51,11 @@ for type in ["obs", "syn"]:
     # Loop over both events
     for i, evid in enumerate(["us6000jllz", "us6000jlqa"]):
         df = pd.read_csv(f"{type}_{evid}.csv", dtype={"codes": str})
+
+        if type == "syn":
+            df2 = pd.read_csv(f"obs_{evid}.csv", dtype={"codes": str})
+            df = df.merge(df2, on="codes", suffixes=("", "obs"))
+
         stalats = np.array(df["lats"])
         stalons = np.array(df["lons"])
         stadeps = np.full_like(stalats, 0.0)
