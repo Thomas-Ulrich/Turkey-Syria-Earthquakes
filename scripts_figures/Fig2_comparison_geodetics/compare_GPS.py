@@ -66,8 +66,8 @@ def read_seissol_surface_data(xdmfFilename,event):
         U = sx.ReadData("u1", 1) - sx.ReadData("u1", 0)
         V = sx.ReadData("u2", 1) - sx.ReadData("u2", 0)
         W = sx.ReadData("u3", 1) - sx.ReadData("u3", 0)
+        
     # project the data to geocentric (lat, lon)
-
     myproj = "+proj=tmerc +datum=WGS84 +k=0.9996 +lon_0=37.0 +lat_0=37.0"
     transformer = Transformer.from_crs(myproj, "epsg:4326", always_xy=True)
     lons, lats = transformer.transform(xyz[:, 0], xyz[:, 1])
@@ -98,7 +98,7 @@ def interpolate_seissol_surf_output(lonlat_barycenter,U,df):
 
 
 def plot_quiver(lon,lat,ew,ns,scale,color,width,label):
-    Q=ax[0].quiver(
+    ax[0].quiver(
         lon,
         lat,
         ew,
@@ -143,11 +143,9 @@ event = np.int64(arg.event[0])
 gps = '/home/mathilde/Bureau/Work/Turquie/data/GPS/GPS_turkey_sequence.csv'
 df = pd.read_csv(gps)
 
-#surface = '/home/mathilde/Bureau/Work/Turquie/dynamic_rupture/prefered_model_thomas/output_model_0803/Turkey_2events_31mio_o5_2003_resampled-surface.xdmf'
-
 # Read SeisSol output and interpolate output to GPS data point locations
 lons, lats, lonlat_barycenter, connect, U, V, W = read_seissol_surface_data(arg.surface[0],event)
-ui,vi,wi = interpolate_seissol_surf_output(lonlat_barycenter,U,df)    
+ui, vi, wi = interpolate_seissol_surf_output(lonlat_barycenter,U,df)    
 
 if event == 1:
    # data
@@ -156,16 +154,14 @@ if event == 1:
    ew  = df['ew1'].to_numpy() 
    ns  = df['ns1'].to_numpy() 
    dz  = df['dz1'].to_numpy() 
-   
-   dt = 150
-   
-   # plotting parameters
+      
+   # plotting parameters for event 1
    if arg.component[0] == 'horizontal':
       scale = 2
       leg = 0.3
    else:
-       scale = 1
-       leg = 0.2  
+      scale = 1
+      leg = 0.2  
    width = 0.006
     
 elif event == 2: 
@@ -174,23 +170,20 @@ elif event == 2:
    ew = df['ew2'].to_numpy() 
    ns = df['ns2'].to_numpy() 
    dz = df['dz2'].to_numpy() 
-   
-   dt = 0
 
+   # plotting parameters for event 2
    if arg.component[0] == 'horizontal':
       scale = 10
       leg = 2
    else:
-       scale = 6
-       leg = 1
+      scale = 6
+      leg = 1
    width = 0.006
-
 
 # Plot GPS comparison 
 extentmap = [35.4, 39, 35.8, 39]
 color1 = [1,0.7,0.3] # color for data
 color2 = [0.2,0.5,1.0] # color for predictions
-
 
 fig = plt.figure()
 fig.set_size_inches(5, 4.5)
@@ -217,14 +210,13 @@ for i in range(0,np.size(df,0)-1):
             ax[0].text(df["lon"].to_numpy()[i]+0.07, df["lat"].to_numpy()[i],df["station"][i], font=fpath,color=[0.2,0.2,0.2])
 
 # Plot legend
-
 plot_quiver(38,36,leg,0,scale,color2,width,'data')
 ax[0].text(38-0.1,36,'Predictions',font=fpath,color=color2,horizontalalignment='right',verticalalignment='center')
 plot_quiver(38,36.3,leg,0,scale,color1,width,'data')
 ax[0].text(38-0.1,36.3,'Data',font=fpath,color=color1,horizontalalignment='right',verticalalignment='center')
 ax[0].text(38+0.4,36.15,f"{leg} m",font=fpath,color=[0.3,0.3,0.3],horizontalalignment='right',verticalalignment='center')
 
-
-fn = f"/home/mathilde/Bureau/Work/Turquie/dynamic_rupture/TUTurkey-Syria-Earthquakes-main/Turkey-Syria-Earthquakes-main/scripts_figures/comp_GPS_event_{event}_comp_{arg.component[0]}.png"
+# Write .png file
+fn = f"output/comp_GPS_event_{event}_comp_{arg.component[0]}.png"
 plt.savefig(fn, dpi=300, bbox_inches="tight")
 print(f"done writing {fn}")
