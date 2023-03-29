@@ -13,12 +13,6 @@ SPROJ = "+proj=tmerc +datum=WGS84 +k=0.9996 +lon_0=37.0 +lat_0=37.0"
 TRANSFORMER = Transformer.from_crs(SPROJ, "epsg:4326", always_xy=True)
 TRANSFORMER_INV = Transformer.from_crs("epsg:4326", SPROJ, always_xy=True)
 
-# Only calculate synthetic PGAs for stations within this bounding box
-lonmin = 34
-lonmax = 40
-latmin = 35
-latmax = 39
-
 parser = argparse.ArgumentParser(
     description="compute synthetic PGAs from SeisSol ascii receivers"
 )
@@ -48,12 +42,15 @@ split = int(time_split / dt)
 
 for evid in ["us6000jllz", "us6000jlqa"]:
     df = pd.read_csv("../../ThirdParty/stations.csv")
-    df = df[
-        (df.lons > lonmin)
-        & (df.lons < lonmax)
-        & (df.lats > latmin)
-        & (df.lats < latmax)
-    ]
+    x, y = TRANSFORMER_INV.transform(df.lons, df.lats)
+    ref_region_theta = np.radians(45)
+    ct = np.cos(ref_region_theta)
+    st = np.sin(ref_region_theta)
+    ref_region_xc = 20e3
+    ref_region_yc = 50e3
+    df["u"] = (x - ref_region_xc) * ct + (y - ref_region_yc) * st
+    df["v"] = (x - ref_region_xc) * -st + (y - ref_region_yc) * ct
+    df = df[(abs(df.u) < 200e3) & (abs(df.v) < 100e3)]
 
     x, y = TRANSFORMER_INV.transform(df.lons, df.lats)
     sta_coords = np.vstack((x, y)).T
