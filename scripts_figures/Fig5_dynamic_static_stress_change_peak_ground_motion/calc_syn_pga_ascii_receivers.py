@@ -1,5 +1,5 @@
 """
-Script compute synthetic PGAs from SeisSol free surface output.
+Script compute synthetic PGAs from SeisSol ascii receivers
 """
 
 import seissolxdmf
@@ -9,13 +9,21 @@ from tqdm import trange
 from pyproj import Transformer
 import groundMotionRoutines as gmr
 import gme
+import argparse
+
+# parsing python arguments
+parser = argparse.ArgumentParser(
+    description="compute synthetic PGAs from SeisSol ascii receivers"
+)
+parser.add_argument("folderPrefix", help="folder and output prefix")
+args = parser.parse_args()
 
 SPROJ = "+proj=tmerc +datum=WGS84 +k=0.9996 +lon_0=37.0 +lat_0=37.0"
 TRANSFORMER = Transformer.from_crs(SPROJ, "epsg:4326", always_xy=True)
 TRANSFORMER_INV = Transformer.from_crs("epsg:4326", SPROJ, always_xy=True)
 
 
-folderprefix = "/home/ulrich/trash/receiversTS23/Turkey78"
+folderprefix = args.folderPrefix
 RawStationFile = "../../ThirdParty/stations.csv"
 sta = pd.read_csv(RawStationFile)
 stations2plot = sta["codes"].to_list()
