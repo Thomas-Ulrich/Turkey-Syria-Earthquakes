@@ -45,12 +45,6 @@ lInvStationLookUpTable = gmr.compileInvLUTGM(
     RawStationFile=RawStationFile,
 )
 
-# Only calculate synthetic PGAs for stations within this bounding box
-lonmin = 34
-lonmax = 40
-latmin = 35
-latmax = 39
-
 use_gmrot = not args.PGA_from_max_component
 
 # Time that the 1st event ends and the 2nd event begins
@@ -63,12 +57,18 @@ split = int(time_split / dt)
 
 for evid in ["us6000jllz", "us6000jlqa"]:
     df = pd.read_csv(RawStationFile)
-    df = df[
-        (df.lons > lonmin)
-        & (df.lons < lonmax)
-        & (df.lats > latmin)
-        & (df.lats < latmax)
-    ]
+    # check is station is in refined area
+    x, y = TRANSFORMER_INV.transform(df.lons, df.lats)
+    ref_region_theta = np.radians(45)
+    ct = np.cos(ref_region_theta)
+    st = np.sin(ref_region_theta)
+    ref_region_xc = 20e3
+    ref_region_yc = 50e3
+    df["u"] = (x - ref_region_xc) * ct + (y - ref_region_yc) * st
+    df["v"] = (x - ref_region_xc) * -st + (y - ref_region_yc) * ct
+    df = df[(abs(df.u) < 200e3) & (abs(df.v) < 100e3)]
+    print(df)
+
     if evid == "us6000jllz":
         start = 0
         stop = split
