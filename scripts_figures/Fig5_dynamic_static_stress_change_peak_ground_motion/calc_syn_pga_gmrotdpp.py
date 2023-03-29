@@ -35,6 +35,7 @@ lonmax = 40
 latmin = 35
 latmax = 39
 
+use_gmrot = True
 
 # Time that the 1st event ends and the 2nd event begins
 time_split = 150
@@ -50,7 +51,7 @@ for evid in ["us6000jllz", "us6000jlqa"]:
         (df.lons > lonmin)
         & (df.lons < lonmax)
         & (df.lats > latmin)
-        & (df.lons < latmax)
+        & (df.lats < latmax)
     ]
     if evid == "us6000jllz":
         start = 0
@@ -76,9 +77,17 @@ for evid in ["us6000jllz", "us6000jlqa"]:
         # Differentiate to get acceleration
         a1 = np.gradient(u, dt)
         a2 = np.gradient(v, dt)
-
-        pgas.append(gme.compute_gmrotdpp_PGA(a1, a2))
-        times.append(0.0)
+        if use_gmrot:
+            pgas.append(gme.compute_gmrotdpp_PGA(a1, a2))
+            times.append(0.0)
+        else:
+            # Use greater of two horizontals for PGA
+            if abs(a1).max() > abs(a2).max():
+                pgas.append(abs(a1).max())
+                times.append(abs(a1).argmax() * dt)
+            else:
+                pgas.append(abs(a2).max())
+                times.append(abs(a2).argmax() * dt)
 
     df["pgas"] = pgas
     df["times"] = times
