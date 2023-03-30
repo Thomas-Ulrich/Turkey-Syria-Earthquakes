@@ -38,8 +38,8 @@ TRANSFORMER_INV = Transformer.from_crs("epsg:4326", SPROJ, always_xy=True)
 
 
 folderprefix = args.folderPrefix
-RawStationFile = "../../ThirdParty/stations.csv"
-sta = pd.read_csv(RawStationFile)
+asciiStationFile = "../../ThirdParty/stations.csv"
+sta = pd.read_csv(asciiStationFile)
 stations2plot = sta["codes"].to_list()
 idlist = range(1, 509)
 lInvStationLookUpTable = gmr.compileInvLUTGM(
@@ -48,7 +48,7 @@ lInvStationLookUpTable = gmr.compileInvLUTGM(
     TRANSFORMER,
     stations2plot,
     inventory=None,
-    RawStationFile=RawStationFile,
+    asciiStationFile=asciiStationFile,
 )
 
 use_gmrot = not args.max_component
@@ -62,7 +62,7 @@ dt = synth[1, 0]
 split = int(time_split / dt)
 
 for evid in ["us6000jllz", "us6000jlqa"]:
-    df = pd.read_csv(RawStationFile)
+    df = pd.read_csv(asciiStationFile)
     # check is station is in refined area
     x, y = TRANSFORMER_INV.transform(df.lons, df.lats)
     ref_region_theta = np.radians(45)

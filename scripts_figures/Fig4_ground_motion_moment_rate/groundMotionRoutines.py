@@ -77,7 +77,7 @@ def findStationFromCoordsInFile(lxmlStationFile, lonlatdepth):
     return code
 
 
-def findStationFromCoordsInRawFile(StationFile, lonlatdepth, stations2plot=[]):
+def findStationFromCoordsInAsciiStationFile(StationFile, lonlatdepth, stations2plot=[]):
     """Find station code (e.g. KIKS, HSES,etc) of station from coordinates
     by raw ascii file"""
     code = False
@@ -371,7 +371,7 @@ def compileInvLUTGM(
     transformer,
     stations2plot=[],
     inventory=None,
-    RawStationFile=None,
+    asciiStationFile=None,
 ):
     print("compiling lookup table...")
     StationLookUpTable = {}
@@ -387,8 +387,8 @@ def compileInvLUTGM(
         if inventory:
             station = findStationFromInventory(inventory, lonlatdepth)
         if not station:
-            station = findStationFromCoordsInRawFile(
-                RawStationFile, lonlatdepth, stations2plot
+            station = findStationFromCoordsInAsciiStationFile(
+                asciiStationFile, lonlatdepth, stations2plot
             )
         if station:
             StationLookUpTable[idStation] = station
