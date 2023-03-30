@@ -52,35 +52,6 @@ def InitializeSeveralStationsFigure(
     return [figall, axarr]
 
 
-def compileInvLUTGM(folderprefix, idlist, inventory=None):
-    StationLookUpTable = {}
-    transformer = Transformer.from_crs(myproj, lla, always_xy=True)
-    id_not_found = []
-    for i, idStation in enumerate(idlist):
-        # Load SeisSol and obspy traces
-        xyzs = gmr.ReadSeisSolSeismogram(folderprefix, idStation, coords_only=True)
-        if not xyzs:
-            id_not_found.append(idStation)
-            continue
-        lonlatdepth = transformer.transform(xyzs[0], xyzs[1], xyzs[2])
-        station = False
-        if inventory:
-            station = gmr.findStationFromInventory(inventory, lonlatdepth)
-        if not station:
-            station = gmr.findStationFromCoordsInRawFile(
-                RawStationFile, lonlatdepth, stations2plot
-            )
-        if station:
-            StationLookUpTable[idStation] = station
-    if id_not_found:
-        print(f"no SeisSol receiver with id {id_not_found}")
-    print(StationLookUpTable)
-    invStationLookUpTable = {v: k for k, v in StationLookUpTable.items()}
-    return invStationLookUpTable
-
-
-workingFolder = "/home/ulrich/work/Mw_78_Turkey/Turkey-Syria-Earthquakes/groundMotions"
-RawStationFile = workingFolder + "/HighRateGPSdata/cGPScoordsWGS84_GPS.dat"
 components = ["E", "N", "Z"]
 # components = ["E", "N"]
 ncol_per_component = 1
@@ -89,7 +60,8 @@ t1 = UTCDateTime(2023, 2, 6, 10, 24, 47.0)
 t2 = t1 + 250
 tplot_max = 100.0
 
-pathObservations = "../../ThirdParty/strongMotionData_2nd"
+
+pathObservations = "../../ThirdParty/strong_motion_data/processed/us6000jlqa"
 use_filter = True
 # use_filter=False
 
@@ -98,12 +70,12 @@ RawStationFile = "../../ThirdParty/stations.csv"
 
 stations2plot = [
     "4612",
-    "4628",
     "4611",
     "4616",
     "0213",
     "4406",
 ]
+
 
 comp2dir = {"E": "EW", "N": "NS", "Z": "UD"}
 directions = [comp2dir[comp] for comp in components]
@@ -111,22 +83,15 @@ figall, axarr = InitializeSeveralStationsFigure(
     len(stations2plot), ncol_per_component, directions
 )
 
-lFolderprefix = [
-    "/home/ulrich/trash/receiversTS23/test1_180_subshear",
-    "/home/ulrich/trash/receiversTS23/test1_180_nu05_083",
-]
 
 lFolderprefix = [
-    "/home/ulrich/trash/receiversTS23/test1_180_nu05_083_062",
-    "/home/ulrich/trash/receiversTS23/test1_180_nu05_083_062_2nd",
+    "/home/ulrich/trash/receiversTS23/Turkey78",
 ]
-
-t0_2nd = [100, 0]
+t0_2nd = [150]
 
 use_filter = True
 plot_spectras = False
 plot_spectrograms = False
-idlist = range(1, 509)
 
 plotdir = "./output/"
 ext = "svg"
@@ -145,8 +110,11 @@ print("compiling lookup table...")
 lInvStationLookUpTable = []
 inventory = None
 nsyn = len(lFolderprefix)
+transformer = Transformer.from_crs(myproj, lla, always_xy=True)
 for folderprefix in lFolderprefix:
-    lInvStationLookUpTable.append(compileInvLUTGM(folderprefix, idlist, inventory))
+    lInvStationLookUpTable.append(
+        gmr.compileInvLUTGM(folderprefix, transformer, asciiStationFile=RawStationFile)
+    )
 
 figall, axarr = InitializeSeveralStationsFigure(
     len(stations2plot), ncol_per_component, directions
@@ -159,53 +127,30 @@ def compute_j0(i, j, nrows, ncol_per_component):
     return j * ncol_per_component + i // nrows
 
 
-transformer = Transformer.from_crs(myproj, lla, always_xy=True)
 for i, station in enumerate(stations2plot):
     i0 = i % nrows
-    data_read = False
-    for ty in ["ap_Acc", "mp_Acc", "N", "H"]:
-        fn = f"{pathObservations}/20230206102447_{station}_{ty}.mseed"
-        if os.path.isfile(fn):
-            print(f"{fn} found")
-            st_obs = read(fn, format="MSEED")
-            if ty in ["N", "H"]:
-                from obspy.core.inventory.inventory import read_inventory
+    fn = f"{pathObservations}/20230206102447_{station}_ap_Acc.mseed"
+    if not os.path.isfile(fn):
+        fn = f"{pathObservations}/20230206102447_{station}_mp_Acc.mseed"
+    st_obs = read(fn, format="MSEED")
+    # scale to m/s
+    for j, comp in enumerate(["E", "N", "Z"]):
+        st_obs.select(component=comp)[0].data *= 0.01
 
-                inv = read_inventory(
-                    f"{pathObservations}/20230206102447_{station}_{ty}.xml"
-                )
-                st_obs.remove_response(output="VEL", inventory=inv)
-                if not station.isnumeric():
-                    for j, comp in enumerate(["E", "N", "Z"]):
-                        st_obs.select(component=comp)[0].data *= 100.0
-            else:
-                # scale to m/s
-                for j, comp in enumerate(["E", "N", "Z"]):
-                    st_obs.select(component=comp)[0].data *= 0.01
-            if station.isnumeric():
-                st_obs.integrate()
-            data_read = True
-            break
-    if not data_read:
-        print(station + "not found in observations")
-        print(
-            [
-                f"{pathObservations}/20230206102447_{station}_{ty}_Acc.mseed"
-                for i in ["ap_Acc", "mp_Acc", "N", "H"]
-            ]
-        )
+    st_obs.integrate()
+
     aSt_syn = []
     for idsyn in range(nsyn):
         try:
             idStation = lInvStationLookUpTable[idsyn][station]
-            xyzs, variablelist, synth = gmr.ReadSeisSolSeismogram(
+            xyzs, variablelist, synth = gmr.readSeisSolSeismogram(
                 lFolderprefix[idsyn], idStation
             )
             synth = synth[synth[:, 0] > t0_2nd[idsyn]]
             lonlatdepth = transformer.transform(xyzs[0], xyzs[1], xyzs[2])
             tplot_max = np.amax(synth[0, :])
             print(station, xyzs)
-            syn_str = gmr.CreateObspyTraceFromSeissolSeismogram(
+            syn_str = gmr.createObspyTraceFromSeissolReceiverData(
                 station, variablelist, synth, t1
             )
             aSt_syn.append(syn_str)
@@ -253,6 +198,7 @@ for i, station in enumerate(stations2plot):
         filterdesc = "NoFilter"
     fplotname = f"{plotdir}/%s_%s_2nd.{ext}" % (station, filterdesc)
     gmr.PlotComparisonStationXYZ(station, lTrace, lColors, fplotname, t1)
+
     # plot all stations on same plot
     shift = 0
     for j, comp in enumerate(components):

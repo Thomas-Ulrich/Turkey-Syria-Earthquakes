@@ -41,10 +41,8 @@ folderprefix = args.folderPrefix
 asciiStationFile = "../../ThirdParty/stations.csv"
 sta = pd.read_csv(asciiStationFile)
 stations2plot = sta["codes"].to_list()
-idlist = range(1, 509)
 lInvStationLookUpTable = gmr.compileInvLUTGM(
     folderprefix,
-    idlist,
     TRANSFORMER,
     stations2plot,
     inventory=None,
@@ -56,7 +54,7 @@ use_gmrot = not args.max_component
 # Time that the 1st event ends and the 2nd event begins
 time_split = 150
 
-[xsyn, ysyn, zsyn], variablelist, synth = gmr.ReadSeisSolSeismogram(folderprefix, 1)
+[xsyn, ysyn, zsyn], variablelist, synth = gmr.readSeisSolSeismogram(folderprefix, 1)
 dt = synth[1, 0]
 
 split = int(time_split / dt)
@@ -91,7 +89,7 @@ for evid in ["us6000jllz", "us6000jlqa"]:
             times.append(np.nan)
             continue
         idst = lInvStationLookUpTable[code]
-        [xsyn, ysyn, zsyn], variablelist, synth = gmr.ReadSeisSolSeismogram(
+        [xsyn, ysyn, zsyn], variablelist, synth = gmr.readSeisSolSeismogram(
             folderprefix, idst
         )
         u = synth[start:stop, variablelist.tolist().index("v1")]

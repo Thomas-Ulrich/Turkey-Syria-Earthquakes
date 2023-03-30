@@ -6,9 +6,10 @@ import xml.etree.ElementTree as ET
 import pyproj
 import matplotlib.pyplot as plt
 import glob
+import pandas as pd
 
 
-def ReadSeisSolSeismogram(folderprefix, idst, coords_only=False):
+def readSeisSolSeismogram(folderprefix, idst, coords_only=False):
     """READ seissol receiver nb i"""
     mytemplate = f"{folderprefix}-receiver-{idst:05d}*"
     lFn = glob.glob(mytemplate)
@@ -16,17 +17,16 @@ def ReadSeisSolSeismogram(folderprefix, idst, coords_only=False):
         return False
     if len(lFn) > 1:
         print("warning, several files match the pattern", lFn)
-    fid = open(lFn[0])
-    fid.readline()
-    variablelist = fid.readline()[11:].split(",")
-    variablelist = np.array([a.strip().strip('"') for a in variablelist])
-    xsyn = float(fid.readline().split()[2])
-    ysyn = float(fid.readline().split()[2])
-    zsyn = float(fid.readline().split()[2])
-    if coords_only:
-        return [xsyn, ysyn, zsyn]
-    synth = np.loadtxt(fid)
-    fid.close()
+    with open(lFn[0]) as fid:
+        fid.readline()
+        variablelist = fid.readline()[11:].split(",")
+        variablelist = np.array([a.strip().strip('"') for a in variablelist])
+        xsyn = float(fid.readline().split()[2])
+        ysyn = float(fid.readline().split()[2])
+        zsyn = float(fid.readline().split()[2])
+        if coords_only:
+            return [xsyn, ysyn, zsyn]
+        synth = np.loadtxt(fid)
     return ([xsyn, ysyn, zsyn], variablelist, synth)
 
 
@@ -46,7 +46,7 @@ def findStationFromCoords(Client, lonlatdepth, eps=1e-3):
     return code
 
 
-def findStationFromInventory(inventory, lonlatdepth, eps=5e-3):
+def stationCodeFromInventory(inventory, lonlatdepth, eps=5e-3):
     """Find code (e.g. KIKS, HSES,etc) of station from coordinates."""
     code = False
     nnet = len(inventory[:])
@@ -61,7 +61,7 @@ def findStationFromInventory(inventory, lonlatdepth, eps=5e-3):
     return code
 
 
-def findStationFromCoordsInFile(lxmlStationFile, lonlatdepth):
+def stationCodeFromListOfXmlFiles(lxmlStationFile, lonlatdepth):
     """Find station code (e.g. KIKS, HSES,etc) of station from coordinates
     by reading station xml file"""
     for xmlf in lxmlStationFile:
@@ -77,32 +77,28 @@ def findStationFromCoordsInFile(lxmlStationFile, lonlatdepth):
     return code
 
 
-def findStationFromCoordsInAsciiStationFile(StationFile, lonlatdepth, stations2plot=[]):
+def stationCodeFromAsciiStationFile(StationFile, lonlatdepth, stations2plot=[]):
     """Find station code (e.g. KIKS, HSES,etc) of station from coordinates
     by raw ascii file"""
     code = False
     ext = os.path.splitext(StationFile)[1]
     if ext == ".csv":
-        import pandas as pd
-
-        # cols = ["Code", "Longitude", "Latitude"]
         cols = ["codes", "lons", "lats"]
         stationInfo = pd.read_csv(StationFile)[cols].to_numpy()
     else:
         stationInfo = np.genfromtxt(StationFile, dtype="str", delimiter=" ")
     nstations = len(stationInfo[:, 0])
-    for i in range(0, nstations):
+    for i in range(nstations):
         lat = float(stationInfo[i, 2])
         lon = float(stationInfo[i, 1])
         if (abs(lon - lonlatdepth[0]) < 1e-3) & (abs(lat - lonlatdepth[1]) < 1e-3):
             code = stationInfo[i, 0]
-            # print(code, lon, lat)
             if (code in stations2plot) or (not stations2plot):
                 break
     return code
 
 
-def CreateObspyTraceFromSeissolSeismogram(station, variablelist, synth, starttime):
+def createObspyTraceFromSeissolReceiverData(station, variablelist, synth, starttime):
     """Load synthetics into an obspy stream"""
     st_syn = read()
     st_syn.clear()
@@ -367,33 +363,31 @@ def removeTopRightAxis(ax):
 
 def compileInvLUTGM(
     folderprefix,
-    idlist,
     transformer,
     stations2plot=[],
     inventory=None,
     asciiStationFile=None,
 ):
+    assert inventory or asciiStationFile
     print("compiling lookup table...")
-    StationLookUpTable = {}
+    stationLookUpTable = {}
     id_not_found = []
-    for i, idStation in enumerate(idlist):
+    mytemplate = f"{folderprefix}-receiver-*"
+    lFn = glob.glob(mytemplate)
+    for i, fn in enumerate(lFn):
+        idStation = int(fn.split(f"{folderprefix}-receiver-")[1].split("-")[0])
         # Load SeisSol and obspy traces
-        xyzs = ReadSeisSolSeismogram(folderprefix, idStation, coords_only=True)
-        if not xyzs:
-            id_not_found.append(idStation)
-            continue
+        xyzs = readSeisSolSeismogram(folderprefix, idStation, coords_only=True)
         lonlatdepth = transformer.transform(xyzs[0], xyzs[1], xyzs[2])
         station = False
         if inventory:
-            station = findStationFromInventory(inventory, lonlatdepth)
+            station = stationCodeFromInventory(inventory, lonlatdepth)
         if not station:
-            station = findStationFromCoordsInAsciiStationFile(
+            station = stationCodeFromAsciiStationFile(
                 asciiStationFile, lonlatdepth, stations2plot
             )
         if station:
-            StationLookUpTable[idStation] = station
-    if id_not_found:
-        print(f"no SeisSol receiver with id {id_not_found}")
-    print(StationLookUpTable)
-    invStationLookUpTable = {v: k for k, v in StationLookUpTable.items()}
+            stationLookUpTable[idStation] = station
+    print(stationLookUpTable)
+    invStationLookUpTable = {v: k for k, v in stationLookUpTable.items()}
     return invStationLookUpTable
