@@ -13,6 +13,7 @@ from obspy import read, UTCDateTime
 import groundMotionRoutines as gmr
 import gme
 from tqdm import tqdm
+import argparse
 
 # Stations that had obvious data problems
 badlist = {
@@ -37,15 +38,30 @@ org_times = {
     "us6000jlqa": UTCDateTime("2023-02-06 10:24:49"),
 }
 
-use_gmrot = True
-use_PGV = False
+# parsing python arguments
+parser = argparse.ArgumentParser(description="compute obs GME")
+parser.add_argument(
+    "--max_component",
+    dest="max_component",
+    default=False,
+    action="store_true",
+    help="compute from the max of each component and not gmrot(geometric mean)",
+)
+parser.add_argument(
+    "--PGV",
+    dest="PGV",
+    default=False,
+    action="store_true",
+    help="compute PGV instead of PGA",
+)
+args = parser.parse_args()
 
 for evid in ["us6000jllz", "us6000jlqa"]:
     t0 = org_times[evid]
 
     print("Reading the strong motion data for %s" % evid)
     st = read("../../ThirdParty/strong_motion_data/processed/%s/*.mseed" % evid)
-    if use_PGV:
+    if args.PGV:
         st = st.integrate()
     for bad in badlist[evid]:
         rm = st.select(station=bad)
@@ -64,12 +80,12 @@ for evid in ["us6000jllz", "us6000jlqa"]:
         lats.append(float(df[df.codes == sta].lats))
         lons.append(float(df[df.codes == sta].lons))
         codes.append(sta)
-
-    print("Computing the PGAs")
+    PGA_PGV = "PGV" if args.PGV else "PGA"
+    print(f"Computing the {PGA_PGV}")
     times, pgas = [], []
 
     for tr_e, tr_n in tqdm(zip(st_e, st_n), total=len(st_e)):
-        if use_gmrot:
+        if not args.max_component:
             pgas.append(gme.compute_gmrotdpp_PGA(tr_n, tr_e))
             times.append(0.0)
         else:
@@ -91,6 +107,6 @@ for evid in ["us6000jllz", "us6000jlqa"]:
     dfn = pd.DataFrame(
         {"lats": lats, "lons": lons, "codes": codes, "pgas": pgas, "times": times}
     )
-    fname = "obs_%s.csv" % evid
+    fname = f"obs_{evid}.csv"
     dfn.to_csv(fname, index=False)
     print("Saved CSV file:", fname)

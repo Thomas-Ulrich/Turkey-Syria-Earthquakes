@@ -39,8 +39,8 @@ evlats = [37.230, 38.008]
 evlons = [37.019, 37.211]
 mags = [7.8, 7.7]
 
-plot_only_station_available_for_both = True
-use_PGV = False
+plot_only_station_available_for_both = False
+use_PGV = True
 max_distance = 1e3
 
 # PGA vs dist figure
@@ -119,29 +119,29 @@ for type in ["obs", "syn"]:
         mean = gmpe.get_mean_and_stddevs(sx, rx, dx, imt, [])[0]
 
         ax = axes1[i]
-
+        cm2m = 100.
+        factor = 1.0/cm2m if use_PGV else cm2m
         # Plot GMPE
-        hundred_or_one = 1.0 if use_PGV else 100
         if type == "obs":
             ax.plot(
-                dx.rjb, hundred_or_one * np.exp(mean), c="r", label="Akkar2014 GMPE"
+                dx.rjb, factor * np.exp(mean), c="r", label="Akkar2014 GMPE"
             )
 
         # Compute GMPE residuals
         dx.rjb = np.array(df["dists"])
         sx.sids = np.full_like(dx.rjb, 0)
         sx.vs30 = np.full_like(dx.rjb, vs30)
-        pred = hundred_or_one * np.exp(
+        pred = factor * np.exp(
             gmpe.get_mean_and_stddevs(sx, rx, dx, imt, [])[0]
         )
-        g_or_one = 9.81 if use_PGV else 1.0
+        g = 9.81
         if type == "obs":
-            obs = df["pgas"] / g_or_one
+            obs = df["pgas"] / cm2m if use_PGV else df["pgas"] / g
             color = OBS_COLOR
             marker = OBS_MARKER
             label = "observed"
         else:
-            obs = 100 * df["pgas"] / g_or_one
+            obs = df["pgas"] if use_PGV else cm2m * df["pgas"] / g
             color = SIM_COLOR
             marker = SIM_MARKER
             label = "simulated"
@@ -191,11 +191,15 @@ for type in ["obs", "syn"]:
         ax.set_xlabel("R$_{\mathrm{JB}}$ (km)")
         if i == 0:
             if use_PGV:
-                ax.set_ylabel("PGV (m/s)")
+                ax.set_ylabel("PGV (cm/s)")
             else:
                 ax.set_ylabel("PGA (%g)")
         ax.set_xlim(1, 1000)
-        ax.set_ylim(2e-2, 2e2)
+        if use_PGV:
+            ax.set_ylim(2e-3, 1e1)
+        else:
+            ax.set_ylim(2e-2, 2e2)
+
         ax.set_xlim(1, 1e3)
         ax.tick_params(axis="both", which="major", labelsize=11)
 

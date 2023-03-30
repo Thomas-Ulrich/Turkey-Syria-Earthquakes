@@ -17,11 +17,11 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument("folderPrefix", help="folder and output prefix")
 parser.add_argument(
-    "--PGA_from_max_component",
-    dest="PGA_from_max_component",
+    "--max_component",
+    dest="max_component",
     default=False,
     action="store_true",
-    help="compute PGA from the max of each component and not gmrot(geometric mean)",
+    help="compute from the max of each component and not gmrot(geometric mean)",
 )
 parser.add_argument(
     "--PGV",
@@ -51,7 +51,7 @@ lInvStationLookUpTable = gmr.compileInvLUTGM(
     RawStationFile=RawStationFile,
 )
 
-use_gmrot = not args.PGA_from_max_component
+use_gmrot = not args.max_component
 
 # Time that the 1st event ends and the 2nd event begins
 time_split = 150
@@ -96,9 +96,14 @@ for evid in ["us6000jllz", "us6000jlqa"]:
         )
         u = synth[start:stop, variablelist.tolist().index("v1")]
         v = synth[start:stop, variablelist.tolist().index("v2")]
-        # Differentiate to get acceleration
-        a1 = np.gradient(u, dt)
-        a2 = np.gradient(v, dt)
+
+        if args.PGV:
+            a1, a2 = u, v
+        else:
+            # Differentiate to get acceleration
+            a1 = np.gradient(u, dt)
+            a2 = np.gradient(v, dt)
+
         if use_gmrot:
             pgas.append(gme.compute_gmrotdpp_PGA(a1, a2))
             times.append(0.0)
