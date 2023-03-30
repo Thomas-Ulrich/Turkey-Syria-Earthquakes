@@ -38,17 +38,20 @@ org_times = {
 }
 
 use_gmrot = True
+use_PGV = False
 
 for evid in ["us6000jllz", "us6000jlqa"]:
     t0 = org_times[evid]
 
     print("Reading the strong motion data for %s" % evid)
     st = read("../../ThirdParty/strong_motion_data/processed/%s/*.mseed" % evid)
+    if use_PGV:
+        st = st.integrate()
     for bad in badlist[evid]:
         rm = st.select(station=bad)
         for tr in rm:
             st.remove(tr)
-    st.trim(starttime=t0, endtime=t0 + 150)
+    st.trim(starttime=t0, endtime=t0 + 250)
     st_e = st.select(channel="E")
     st_n = st.select(channel="N")
 

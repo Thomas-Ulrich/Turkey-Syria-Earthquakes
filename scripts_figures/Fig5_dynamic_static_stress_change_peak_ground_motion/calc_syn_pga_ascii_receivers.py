@@ -23,7 +23,13 @@ parser.add_argument(
     action="store_true",
     help="compute PGA from the max of each component and not gmrot(geometric mean)",
 )
-
+parser.add_argument(
+    "--PGV",
+    dest="PGV",
+    default=False,
+    action="store_true",
+    help="compute PGV instead of PGA",
+)
 args = parser.parse_args()
 
 SPROJ = "+proj=tmerc +datum=WGS84 +k=0.9996 +lon_0=37.0 +lat_0=37.0"
@@ -104,7 +110,7 @@ for evid in ["us6000jllz", "us6000jlqa"]:
             else:
                 pgas.append(abs(a2).max())
                 times.append(abs(a2).argmax() * dt)
-
+    print()
     df["pgas"] = pgas
     df["times"] = times
     df = df.dropna()

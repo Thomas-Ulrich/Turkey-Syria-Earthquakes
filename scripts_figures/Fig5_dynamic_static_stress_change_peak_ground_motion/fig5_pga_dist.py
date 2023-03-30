@@ -7,14 +7,14 @@ Requires:
 
 Writes:
 - pga_dist.png
-- resid_dist.png
+- pga_resid_dist.png
 """
 
 import geojson
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from openquake.hazardlib.imt import PGA
+from openquake.hazardlib.imt import PGA, PGV
 from impactutils.rupture import quad_rupture, origin
 from openquake.hazardlib.gsim.akkar_2014 import AkkarEtAlRjb2014
 from openquake.hazardlib.contexts import SitesContext, DistancesContext, RuptureContext
@@ -38,7 +38,10 @@ evids = ["us6000jllz", "us6000jlqa"]
 evlats = [37.230, 38.008]
 evlons = [37.019, 37.211]
 mags = [7.8, 7.7]
+
 plot_only_station_available_for_both = True
+use_PGV = False
+max_distance = 1e3
 
 # PGA vs dist figure
 fig1, axes1 = plt.subplots(nrows=1, ncols=2, figsize=(7.5, 3.5), sharey=True)
@@ -98,7 +101,7 @@ for type in ["obs", "syn"]:
 
         # Compute JB distances
         df["dists"] = rup.computeRjb(stalats, stalons, stadeps)[0]
-        df = df[df.dists < 250.0]
+        df = df[df.dists < max_distance]
         dx = DistancesContext()
         dx.rjb = np.linspace(1, 1000, 1000)
 
@@ -111,31 +114,37 @@ for type in ["obs", "syn"]:
         sx.sids = np.full_like(dx.rjb, 0)
         sx.vs30 = np.full_like(dx.rjb, vs30)
 
-        imt = PGA()
+        imt = PGV() if use_PGV else PGA()
         gmpe = AkkarEtAlRjb2014()
         mean = gmpe.get_mean_and_stddevs(sx, rx, dx, imt, [])[0]
 
         ax = axes1[i]
 
         # Plot GMPE
+        hundred_or_one = 1.0 if use_PGV else 100
         if type == "obs":
-            ax.plot(dx.rjb, 100 * np.exp(mean), c="r", label="Akkar2014 GMPE")
+            ax.plot(
+                dx.rjb, hundred_or_one * np.exp(mean), c="r", label="Akkar2014 GMPE"
+            )
 
         # Compute GMPE residuals
         dx.rjb = np.array(df["dists"])
         sx.sids = np.full_like(dx.rjb, 0)
         sx.vs30 = np.full_like(dx.rjb, vs30)
-        pred = 100 * np.exp(gmpe.get_mean_and_stddevs(sx, rx, dx, imt, [])[0])
+        pred = hundred_or_one * np.exp(
+            gmpe.get_mean_and_stddevs(sx, rx, dx, imt, [])[0]
+        )
+        g_or_one = 9.81 if use_PGV else 1.0
         if type == "obs":
-            obs = df["pgas"] / 9.81
+            obs = df["pgas"] / g_or_one
             color = OBS_COLOR
             marker = OBS_MARKER
-            label = "Observed data"
+            label = "observed"
         else:
-            obs = 100 * df["pgas"] / 9.81
+            obs = 100 * df["pgas"] / g_or_one
             color = SIM_COLOR
             marker = SIM_MARKER
-            label = "Simulated data"
+            label = "simulated"
 
         resid = np.log(obs / pred)
 
@@ -181,7 +190,10 @@ for type in ["obs", "syn"]:
         ax.set_yscale("log")
         ax.set_xlabel("R$_{\mathrm{JB}}$ (km)")
         if i == 0:
-            ax.set_ylabel("PGA (%g)")
+            if use_PGV:
+                ax.set_ylabel("PGV (m/s)")
+            else:
+                ax.set_ylabel("PGA (%g)")
         ax.set_xlim(1, 1000)
         ax.set_ylim(2e-2, 2e2)
         ax.set_xlim(1, 1e3)
@@ -264,5 +276,6 @@ handles, labels = axes1[0].get_legend_handles_labels()
 axes1[0].legend(handles, labels, loc="lower left", fontsize=9)
 fig1.tight_layout()
 fig2.tight_layout()
-fig1.savefig("output/pga_dist.pdf", bbox_inches="tight", dpi=300)
-fig2.savefig("output/resid_dist.pdf", bbox_inches="tight", dpi=300)
+prefix = "pgv" if use_PGV else "pga"
+fig1.savefig(f"output/{prefix}_dist.png", bbox_inches="tight", dpi=300)
+fig2.savefig(f"output/{prefix}_resid_dist.png", bbox_inches="tight", dpi=300)
