@@ -38,6 +38,7 @@ evids = ["us6000jllz", "us6000jlqa"]
 evlats = [37.230, 38.008]
 evlons = [37.019, 37.211]
 mags = [7.8, 7.7]
+plot_only_station_available_for_both =  True
 
 # PGA vs dist figure
 fig1, axes1 = plt.subplots(nrows=1, ncols=2, figsize=(7.5, 3.5), sharey=True)
@@ -50,11 +51,24 @@ fig2, axes2 = plt.subplots(nrows=1, ncols=2, figsize=(7.5, 3.5), sharey=True)
 for type in ["obs", "syn"]:
     # Loop over both events
     for i, evid in enumerate(["us6000jllz", "us6000jlqa"]):
-        df = pd.read_csv(f"{type}_{evid}.csv", dtype={"codes": str})
+        if plot_only_station_available_for_both:
+            if type == "obs":
+                df = pd.read_csv(f"{type}_{evid}.csv", dtype={"codes": str})
+                other_evid = "us6000jllz" if evid == "us6000jlqa" else "us6000jlqa"
+                df2 = pd.read_csv(f"{type}_{other_evid}.csv", dtype={"codes": str})
+                df = df.merge(df2, on="codes", suffixes=("", "obs2"))
+                df.to_csv("merged_obs.csv", index=False)
+            else:
+                df = pd.read_csv(f"{type}_{evid}.csv", dtype={"codes": str})
 
-        if type == "syn":
-            df2 = pd.read_csv(f"obs_{evid}.csv", dtype={"codes": str})
-            df = df.merge(df2, on="codes", suffixes=("", "obs"))
+            if type == "syn":
+                df2 = pd.read_csv(f"merged_obs.csv", dtype={"codes": str})
+                df = df.merge(df2, on="codes", suffixes=("", "obs"))
+        else:
+            df = pd.read_csv(f"{type}_{evid}.csv", dtype={"codes": str})
+            if type == "syn":
+                df2 = pd.read_csv(f"obs_{evid}.csv", dtype={"codes": str})
+                df = df.merge(df2, on="codes", suffixes=("", "obs"))
 
         stalats = np.array(df["lats"])
         stalons = np.array(df["lons"])
