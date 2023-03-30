@@ -38,7 +38,7 @@ evids = ["us6000jllz", "us6000jlqa"]
 evlats = [37.230, 38.008]
 evlons = [37.019, 37.211]
 mags = [7.8, 7.7]
-plot_only_station_available_for_both =  True
+plot_only_station_available_for_both = True
 
 # PGA vs dist figure
 fig1, axes1 = plt.subplots(nrows=1, ncols=2, figsize=(7.5, 3.5), sharey=True)
