@@ -50,6 +50,7 @@ lInvStationLookUpTable = gmr.compileInvLUTGM(
 )
 
 use_gmrot = not args.max_component
+PGA_PGV = "PGV" if args.PGV else "PGA"
 
 # Time that the 1st event ends and the 2nd event begins
 time_split = 150
@@ -117,4 +118,4 @@ for evid in ["us6000jllz", "us6000jlqa"]:
     df["pgas"] = pgas
     df["times"] = times
     df = df.dropna()
-    df.to_csv(f"syn_{evid}.csv", index=False)
+    df.to_csv(f"syn_{evid}_{PGA_PGV}.csv", index=False)

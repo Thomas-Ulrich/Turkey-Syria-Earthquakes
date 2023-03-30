@@ -107,6 +107,6 @@ for evid in ["us6000jllz", "us6000jlqa"]:
     dfn = pd.DataFrame(
         {"lats": lats, "lons": lons, "codes": codes, "pgas": pgas, "times": times}
     )
-    fname = f"obs_{evid}.csv"
+    fname = f"obs_{evid}_{PGA_PGV}.csv"
     dfn.to_csv(fname, index=False)
     print("Saved CSV file:", fname)

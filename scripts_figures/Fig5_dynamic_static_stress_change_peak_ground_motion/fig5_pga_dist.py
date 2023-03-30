@@ -18,7 +18,7 @@ from openquake.hazardlib.imt import PGA, PGV
 from impactutils.rupture import quad_rupture, origin
 from openquake.hazardlib.gsim.akkar_2014 import AkkarEtAlRjb2014
 from openquake.hazardlib.contexts import SitesContext, DistancesContext, RuptureContext
-
+import argparse
 
 # Matplotlib settings
 plt.rcParams["font.sans-serif"] = "Arial"
@@ -39,8 +39,28 @@ evlats = [37.230, 38.008]
 evlons = [37.019, 37.211]
 mags = [7.8, 7.7]
 
-plot_only_station_available_for_both = False
-use_PGV = True
+# parsing python arguments
+parser = argparse.ArgumentParser(description="plot fig 5")
+parser.add_argument(
+    "--only_stations_both_events",
+    dest="only_stations_both_events",
+    default=False,
+    action="store_true",
+    help="plot only data of the stations that recorded both events",
+)
+parser.add_argument(
+    "--PGV",
+    dest="PGV",
+    default=False,
+    action="store_true",
+    help="plot PGV instead of PGA",
+)
+args = parser.parse_args()
+
+
+
+plot_only_station_available_for_both = args.only_stations_both_events
+use_PGV = args.PGV
 max_distance = 1e3
 
 # PGA vs dist figure
@@ -48,6 +68,7 @@ fig1, axes1 = plt.subplots(nrows=1, ncols=2, figsize=(7.5, 3.5), sharey=True)
 
 # Residuals vs dist figure
 fig2, axes2 = plt.subplots(nrows=1, ncols=2, figsize=(7.5, 3.5), sharey=True)
+PGA_PGV = "PGV" if use_PGV else "PGA"
 
 
 # Loop over observations and simulations
@@ -56,21 +77,21 @@ for type in ["obs", "syn"]:
     for i, evid in enumerate(["us6000jllz", "us6000jlqa"]):
         if plot_only_station_available_for_both:
             if type == "obs":
-                df = pd.read_csv(f"{type}_{evid}.csv", dtype={"codes": str})
+                df = pd.read_csv(f"{type}_{evid}_{PGA_PGV}.csv", dtype={"codes": str})
                 other_evid = "us6000jllz" if evid == "us6000jlqa" else "us6000jlqa"
-                df2 = pd.read_csv(f"{type}_{other_evid}.csv", dtype={"codes": str})
+                df2 = pd.read_csv(f"{type}_{other_evid}_{PGA_PGV}.csv", dtype={"codes": str})
                 df = df.merge(df2, on="codes", suffixes=("", "obs2"))
                 df.to_csv("merged_obs.csv", index=False)
             else:
-                df = pd.read_csv(f"{type}_{evid}.csv", dtype={"codes": str})
+                df = pd.read_csv(f"{type}_{evid}_{PGA_PGV}.csv", dtype={"codes": str})
 
             if type == "syn":
                 df2 = pd.read_csv(f"merged_obs.csv", dtype={"codes": str})
                 df = df.merge(df2, on="codes", suffixes=("", "obs"))
         else:
-            df = pd.read_csv(f"{type}_{evid}.csv", dtype={"codes": str})
+            df = pd.read_csv(f"{type}_{evid}_{PGA_PGV}.csv", dtype={"codes": str})
             if type == "syn":
-                df2 = pd.read_csv(f"obs_{evid}.csv", dtype={"codes": str})
+                df2 = pd.read_csv(f"obs_{evid}_{PGA_PGV}.csv", dtype={"codes": str})
                 df = df.merge(df2, on="codes", suffixes=("", "obs"))
 
         stalats = np.array(df["lats"])
@@ -122,7 +143,7 @@ for type in ["obs", "syn"]:
         cm2m = 100.
         factor = 1.0/cm2m if use_PGV else cm2m
         # Plot GMPE
-        if type == "obs":
+        if type == "obs" and not use_PGV: 
             ax.plot(
                 dx.rjb, factor * np.exp(mean), c="r", label="Akkar2014 GMPE"
             )
@@ -281,5 +302,5 @@ axes1[0].legend(handles, labels, loc="lower left", fontsize=9)
 fig1.tight_layout()
 fig2.tight_layout()
 prefix = "pgv" if use_PGV else "pga"
-fig1.savefig(f"output/{prefix}_dist.png", bbox_inches="tight", dpi=300)
-fig2.savefig(f"output/{prefix}_resid_dist.png", bbox_inches="tight", dpi=300)
+fig1.savefig(f"output/{prefix}_dist.pdf", bbox_inches="tight", dpi=300)
+fig2.savefig(f"output/{prefix}_resid_dist.pdf", bbox_inches="tight", dpi=300)
