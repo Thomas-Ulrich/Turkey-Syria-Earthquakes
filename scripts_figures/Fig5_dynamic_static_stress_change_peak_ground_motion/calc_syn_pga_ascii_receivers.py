@@ -24,6 +24,14 @@ parser.add_argument(
     help="compute from the max of each component and not gmrot(geometric mean)",
 )
 parser.add_argument(
+    "--event",
+    nargs=1,
+    help="1: mainshock, 2: aftershock, both: both",
+    choices=["both", "1", "2"],
+    default="both",
+)
+
+parser.add_argument(
     "--PGV",
     dest="PGV",
     default=False,
@@ -53,14 +61,25 @@ use_gmrot = not args.max_component
 PGA_PGV = "PGV" if args.PGV else "PGA"
 
 # Time that the 1st event ends and the 2nd event begins
-time_split = 150
+time_split = 150.0
 
 [xsyn, ysyn, zsyn], variablelist, synth = gmr.readSeisSolSeismogram(folderprefix, 1)
 dt = synth[1, 0]
 
 split = int(time_split / dt)
 
-for evid in ["us6000jllz", "us6000jlqa"]:
+if args.event[0] == "both":
+    print(f"computing for both events, with time split {time_split}")
+    levid = ["us6000jllz", "us6000jlqa"]
+elif args.event[0] == "1":
+    print(f"computing for mainshock only (whole simulation)")
+    levid = ["us6000jllz"]
+else:
+    print(f"computing for 2nd event only (whole simulation)")
+    print(args.event)
+    levid = ["us6000jlqa"]
+
+for evid in levid:
     df = pd.read_csv(asciiStationFile)
     # check is station is in refined area
     x, y = TRANSFORMER_INV.transform(df.lons, df.lats)
@@ -74,11 +93,15 @@ for evid in ["us6000jllz", "us6000jlqa"]:
     df = df[(abs(df.u) < 200e3) & (abs(df.v) < 100e3)]
     print(df)
 
-    if evid == "us6000jllz":
-        start = 0
-        stop = split
+    if args.event[0] == "both":
+        if evid == "us6000jllz":
+            start = 0
+            stop = split
+        else:
+            start = split
+            stop = -1
     else:
-        start = split
+        start = 0
         stop = -1
 
     pgas = []
