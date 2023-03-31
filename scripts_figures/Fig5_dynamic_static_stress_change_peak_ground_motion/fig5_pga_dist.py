@@ -156,10 +156,9 @@ for type in ["obs", "syn"]:
         # Plot GMPE
         if type == "obs" and not use_PGV:
             ax.plot(dx.rjb, factor * np.exp(mean), c="r", label="Akkar2014 GMPE")
-
-        lower = factor * np.exp(mean - 2 * sd[0])
-        upper = factor * np.exp(mean + 2 * sd[0])
-        ax.fill_between(dx.rjb, lower, upper, color='r', alpha=0.05)
+            lower = factor * np.exp(mean - 2 * sd[0])
+            upper = factor * np.exp(mean + 2 * sd[0])
+            ax.fill_between(dx.rjb, lower, upper, color='r', alpha=0.05)
 
         # Compute GMPE residuals
         dx.rjb = np.array(df["dists"])
