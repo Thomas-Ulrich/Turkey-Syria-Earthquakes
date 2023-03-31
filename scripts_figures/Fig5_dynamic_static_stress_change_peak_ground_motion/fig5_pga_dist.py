@@ -49,6 +49,17 @@ parser.add_argument(
     help="plot only data of the stations that recorded both events",
 )
 parser.add_argument(
+    "--obs_if_synthetics_available",
+    dest="obs_if_synthetics_available",
+    default=False,
+    action="store_true",
+    help="plot only obs data of the stations which are included in the synthetics dataset",
+)
+parser.add_argument(
+    "--extension", nargs=1, default=(["png"]), help="extension output file"
+)
+
+parser.add_argument(
     "--PGV",
     dest="PGV",
     default=False,
@@ -74,28 +85,24 @@ PGA_PGV = "PGV" if use_PGV else "PGA"
 for type in ["obs", "syn"]:
     # Loop over both events
     for i, evid in enumerate(["us6000jllz", "us6000jlqa"]):
-        if plot_only_station_available_for_both:
-            if type == "obs":
-                df = pd.read_csv(f"{type}_{evid}_{PGA_PGV}.csv", dtype={"codes": str})
-                other_evid = "us6000jllz" if evid == "us6000jlqa" else "us6000jlqa"
-                df2 = pd.read_csv(
-                    f"{type}_{other_evid}_{PGA_PGV}.csv", dtype={"codes": str}
-                )
-                df = df.merge(df2, on="codes", suffixes=("", "obs2"))
-                df.to_csv("merged_obs.csv", index=False)
-                df2 = pd.read_csv(f"syn_{evid}_{PGA_PGV}.csv", dtype={"codes": str})
-                df = df.merge(df2, on="codes", suffixes=("", "syn"))
-            else:
-                df = pd.read_csv(f"{type}_{evid}_{PGA_PGV}.csv", dtype={"codes": str})
+        df = pd.read_csv(f"{type}_{evid}_{PGA_PGV}.csv", dtype={"codes": str})
+        if type == "obs" and plot_only_station_available_for_both:
+            # in this case we need to generate a merged database of station that recorded both
+            other_evid = "us6000jllz" if evid == "us6000jlqa" else "us6000jlqa"
+            df2 = pd.read_csv(
+                f"{type}_{other_evid}_{PGA_PGV}.csv", dtype={"codes": str}
+            )
+            df = df.merge(df2, on="codes", suffixes=("", "obs2"))
+            df.to_csv("merged_obs.csv", index=False)
+        
+        if type == "obs" and args.obs_if_synthetics_available:
+            df2 = pd.read_csv(f"syn_{evid}_{PGA_PGV}.csv", dtype={"codes": str})
+            df = df.merge(df2, on="codes", suffixes=("", "syn"))
 
-            if type == "syn":
-                df2 = pd.read_csv(f"merged_obs.csv", dtype={"codes": str})
-                df = df.merge(df2, on="codes", suffixes=("", "obs"))
-        else:
-            df = pd.read_csv(f"{type}_{evid}_{PGA_PGV}.csv", dtype={"codes": str})
-            if type == "syn":
-                df2 = pd.read_csv(f"obs_{evid}_{PGA_PGV}.csv", dtype={"codes": str})
-                df = df.merge(df2, on="codes", suffixes=("", "obs"))
+        if type == "syn":
+            fn = "merged_obs.csv" if plot_only_station_available_for_both else f"obs_{evid}_{PGA_PGV}.csv"
+            df2 = pd.read_csv(fn, dtype={"codes": str})
+            df = df.merge(df2, on="codes", suffixes=("", "obs"))
 
         stalats = np.array(df["lats"])
         stalons = np.array(df["lons"])
@@ -301,5 +308,10 @@ axes1[0].legend(handles, labels, loc="lower left", fontsize=9)
 fig1.tight_layout()
 fig2.tight_layout()
 prefix = "pgv" if use_PGV else "pga"
-fig1.savefig(f"output/{prefix}_dist.pdf", bbox_inches="tight", dpi=300)
-fig2.savefig(f"output/{prefix}_resid_dist.pdf", bbox_inches="tight", dpi=300)
+ext = args.extension[0]
+fn = f"output/{prefix}_dist.{ext}"
+fig1.savefig(fn, bbox_inches="tight", dpi=300)
+print(f"done writing {fn}")
+fn = f"output/{prefix}_resid_dist.{ext}"
+fig2.savefig(fn, bbox_inches="tight", dpi=300)
+print(f"done writing {fn}")

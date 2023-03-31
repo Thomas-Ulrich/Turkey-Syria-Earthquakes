@@ -68,15 +68,14 @@ dt = synth[1, 0]
 
 split = int(time_split / dt)
 
-if args.event[0] == "both":
+if args.event == "both":
     print(f"computing for both events, with time split {time_split}")
     levid = ["us6000jllz", "us6000jlqa"]
-elif args.event[0] == "1":
+elif args.event == "1":
     print(f"computing for mainshock only (whole simulation)")
     levid = ["us6000jllz"]
 else:
     print(f"computing for 2nd event only (whole simulation)")
-    print(args.event)
     levid = ["us6000jlqa"]
 
 for evid in levid:
@@ -93,7 +92,7 @@ for evid in levid:
     df = df[(abs(df.u) < 200e3) & (abs(df.v) < 100e3)]
     print(df)
 
-    if args.event[0] == "both":
+    if args.event == "both":
         if evid == "us6000jllz":
             start = 0
             stop = split
