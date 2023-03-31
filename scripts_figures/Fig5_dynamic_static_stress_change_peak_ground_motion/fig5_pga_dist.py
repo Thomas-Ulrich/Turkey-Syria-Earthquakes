@@ -222,7 +222,7 @@ for type in ["obs", "syn"]:
         ax.set_xlabel("R$_{\mathrm{JB}}$ (km)")
         if i == 0:
             if use_PGV:
-                ax.set_ylabel("PGV (cm/s)")
+                ax.set_ylabel("PGV (m/s)")
             else:
                 ax.set_ylabel("PGA (%g)")
         ax.set_xlim(1, 1000)
