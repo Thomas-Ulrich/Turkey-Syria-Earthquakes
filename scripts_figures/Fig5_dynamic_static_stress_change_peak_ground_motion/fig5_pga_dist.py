@@ -58,7 +58,6 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-
 plot_only_station_available_for_both = args.only_stations_both_events
 use_PGV = args.PGV
 max_distance = 1e3
@@ -79,9 +78,13 @@ for type in ["obs", "syn"]:
             if type == "obs":
                 df = pd.read_csv(f"{type}_{evid}_{PGA_PGV}.csv", dtype={"codes": str})
                 other_evid = "us6000jllz" if evid == "us6000jlqa" else "us6000jlqa"
-                df2 = pd.read_csv(f"{type}_{other_evid}_{PGA_PGV}.csv", dtype={"codes": str})
+                df2 = pd.read_csv(
+                    f"{type}_{other_evid}_{PGA_PGV}.csv", dtype={"codes": str}
+                )
                 df = df.merge(df2, on="codes", suffixes=("", "obs2"))
                 df.to_csv("merged_obs.csv", index=False)
+                df2 = pd.read_csv(f"syn_{evid}_{PGA_PGV}.csv", dtype={"codes": str})
+                df = df.merge(df2, on="codes", suffixes=("", "syn"))
             else:
                 df = pd.read_csv(f"{type}_{evid}_{PGA_PGV}.csv", dtype={"codes": str})
 
@@ -140,21 +143,17 @@ for type in ["obs", "syn"]:
         mean = gmpe.get_mean_and_stddevs(sx, rx, dx, imt, [])[0]
 
         ax = axes1[i]
-        cm2m = 100.
-        factor = 1.0/cm2m if use_PGV else cm2m
+        cm2m = 100.0
+        factor = 1.0 / cm2m if use_PGV else cm2m
         # Plot GMPE
-        if type == "obs" and not use_PGV: 
-            ax.plot(
-                dx.rjb, factor * np.exp(mean), c="r", label="Akkar2014 GMPE"
-            )
+        if type == "obs" and not use_PGV:
+            ax.plot(dx.rjb, factor * np.exp(mean), c="r", label="Akkar2014 GMPE")
 
         # Compute GMPE residuals
         dx.rjb = np.array(df["dists"])
         sx.sids = np.full_like(dx.rjb, 0)
         sx.vs30 = np.full_like(dx.rjb, vs30)
-        pred = factor * np.exp(
-            gmpe.get_mean_and_stddevs(sx, rx, dx, imt, [])[0]
-        )
+        pred = factor * np.exp(gmpe.get_mean_and_stddevs(sx, rx, dx, imt, [])[0])
         g = 9.81
         if type == "obs":
             obs = df["pgas"] / cm2m if use_PGV else df["pgas"] / g

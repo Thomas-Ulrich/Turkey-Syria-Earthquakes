@@ -10,8 +10,21 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import cartopy.io.img_tiles as cimgt
 from impactutils.mapping.scalebar import draw_scale
+import argparse
+
+# parsing python arguments
+parser = argparse.ArgumentParser(description="plot map comparing observed/synthetic PGAs or PGVs for both events")
+parser.add_argument(
+    "--PGV",
+    dest="PGV",
+    default=False,
+    action="store_true",
+    help="plot PGV instead of PGA",
+)
+args = parser.parse_args()
 
 
+PGA_PGV = "PGV" if args.PGV else "PGA"
 # USGS fault traces
 # TODO: use fault traces for the actual model setup
 shapefile = gpd.read_file(
@@ -23,10 +36,10 @@ def pga_to_size(pga):
     return 0.05e3 * np.log(pga) - 0.02e3
 
 
-files = ['obs_us6000jllz.csv', 'syn_us6000jllz.csv',
-         'obs_us6000jlqa.csv', 'syn_us6000jlqa.csv']
+files = [f'obs_us6000jllz_{PGA_PGV}.csv', f'syn_us6000jllz_{PGA_PGV}.csv',
+         f'obs_us6000jlqa_{PGA_PGV}.csv', f'syn_us6000jlqa_{PGA_PGV}.csv']
 
-dfs = [pd.read_csv(file) for file in files]
+dfs = [pd.read_csv(file, dtype={"codes": str}) for file in files]
 
 df1 = dfs[0].merge(dfs[1], on='codes')
 df2 = dfs[2].merge(dfs[3], on='codes')
