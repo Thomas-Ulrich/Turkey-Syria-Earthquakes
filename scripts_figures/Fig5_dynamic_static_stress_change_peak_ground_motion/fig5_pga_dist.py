@@ -18,6 +18,7 @@ from openquake.hazardlib.imt import PGA, PGV
 from impactutils.rupture import quad_rupture, origin
 from openquake.hazardlib.gsim.akkar_2014 import AkkarEtAlRjb2014
 from openquake.hazardlib.contexts import SitesContext, DistancesContext, RuptureContext
+from openquake.hazardlib.const import StdDev
 import argparse
 
 # Matplotlib settings
@@ -94,7 +95,7 @@ for type in ["obs", "syn"]:
             )
             df = df.merge(df2, on="codes", suffixes=("", "obs2"))
             df.to_csv("merged_obs.csv", index=False)
-        
+
         if type == "obs" and args.obs_if_synthetics_available:
             df2 = pd.read_csv(f"syn_{evid}_{PGA_PGV}.csv", dtype={"codes": str})
             df = df.merge(df2, on="codes", suffixes=("", "syn"))
@@ -147,7 +148,7 @@ for type in ["obs", "syn"]:
 
         imt = PGV() if use_PGV else PGA()
         gmpe = AkkarEtAlRjb2014()
-        mean = gmpe.get_mean_and_stddevs(sx, rx, dx, imt, [])[0]
+        mean, sd = gmpe.get_mean_and_stddevs(sx, rx, dx, imt, [StdDev.TOTAL])
 
         ax = axes1[i]
         cm2m = 100.0
@@ -155,6 +156,10 @@ for type in ["obs", "syn"]:
         # Plot GMPE
         if type == "obs" and not use_PGV:
             ax.plot(dx.rjb, factor * np.exp(mean), c="r", label="Akkar2014 GMPE")
+
+        lower = factor * np.exp(mean - 2 * sd[0])
+        upper = factor * np.exp(mean + 2 * sd[0])
+        ax.fill_between(dx.rjb, lower, upper, color='r', alpha=0.05)
 
         # Compute GMPE residuals
         dx.rjb = np.array(df["dists"])
