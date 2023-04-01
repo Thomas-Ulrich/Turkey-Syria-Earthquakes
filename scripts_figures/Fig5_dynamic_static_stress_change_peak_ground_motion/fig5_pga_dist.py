@@ -154,7 +154,7 @@ for type in ["obs", "syn"]:
         cm2m = 100.0
         factor = 1.0 / cm2m if use_PGV else cm2m
         # Plot GMPE
-        if type == "obs" and not use_PGV:
+        if type == "obs":
             ax.plot(dx.rjb, factor * np.exp(mean), c="r", label="Akkar2014 GMPE")
             lower = factor * np.exp(mean - 2 * sd[0])
             upper = factor * np.exp(mean + 2 * sd[0])
