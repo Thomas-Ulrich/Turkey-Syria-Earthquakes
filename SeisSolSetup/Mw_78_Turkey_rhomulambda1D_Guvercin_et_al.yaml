@@ -1,5 +1,5 @@
 !LuaMap
-returns: [rho, mu, lambda, plastCo]
+returns: [rho, mu, lambda, plastCo, Qs, Qp]
 function: |
   function f (x)
     xi = x["z"]
@@ -36,6 +36,8 @@ function: |
      rho = rho,
      mu = mu,
      lambda = lambda,
-     plastCo = 0.0002 * math.max(mu, 24239362183.242527)
+     plastCo = 0.0002 * math.max(mu, 24239362183.242527),
+     Qs = 0.05 * math.sqrt(mu/rho),
+     Qp = 0.1 * math.sqrt(mu/rho)
     }
     end
