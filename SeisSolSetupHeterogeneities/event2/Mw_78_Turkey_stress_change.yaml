@@ -1,0 +1,20 @@
+!EvalModel
+parameters: [c_xx, c_yy, c_zz, c_xy, c_yz, c_xz, b1_xx, b1_yy, b1_zz, b1_xy, b1_yz, b1_xz, alpha]
+model: !Switch
+  [c_xx, c_yy, c_zz, c_xy, c_yz, c_xz]: !Include Mw_78_Turkey_stress_change_kinematic_model.yaml
+  [b1_xx, b1_yy, b1_zz, b1_xy, b1_yz, b1_xz]: !Include Mw_78_Turkey_stress_change_event1.yaml
+  [alpha]: !Include Mw_78_Turkey_alpha.yaml
+components: 
+!LuaMap
+  returns: [bc_xx, bc_yy, bc_zz, bc_xy, bc_yz, bc_xz]
+  function: |
+     function f (x)
+      return {
+        bc_xx = x["c_xx"] * x["alpha"] + x["b1_xx"],
+        bc_yy = x["c_yy"] * x["alpha"] + x["b1_yy"],
+        bc_zz = x["c_zz"] * x["alpha"] + x["b1_zz"],
+        bc_xy = x["c_xy"] * x["alpha"] + x["b1_xy"],
+        bc_yz = x["c_yz"] * x["alpha"] + x["b1_yz"],
+        bc_xz = x["c_xz"] * x["alpha"] + x["b1_xz"]
+      }
+      end

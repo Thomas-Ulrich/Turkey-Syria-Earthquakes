@@ -1,0 +1,31 @@
+!EvalModel
+parameters: [c_xx, c_yy, c_zz, c_xy, c_yz, c_xz]
+model: !Switch
+  [c_xx, c_yy, c_zz, c_xy, c_yz, c_xz]: !Any
+     components: !Any
+       - !ASAGI
+           file: ../asagi_file/StressChange_from_event1_ASAGI.nc
+           parameters: [c_xx, c_yy, c_zz, c_xy, c_yz, c_xz]
+           var: data
+           interpolation: linear   
+       - !ConstantMap
+         map:
+           c_xx: 0.0
+           c_yy: 0.0
+           c_zz: 0.0
+           c_xy: 0.0
+           c_yz: 0.0
+           c_xz: 0.0
+components: !LuaMap
+  returns: [b1_xx, b1_yy, b1_zz, b1_xy, b1_yz, b1_xz]
+  function: |
+     function f (x)
+      return {
+        b1_xx = x["c_xx"],
+        b1_yy = x["c_yy"],
+        b1_zz = x["c_zz"],
+        b1_xy = x["c_xy"],
+        b1_yz = x["c_yz"],
+        b1_xz = x["c_xz"]
+      }
+      end

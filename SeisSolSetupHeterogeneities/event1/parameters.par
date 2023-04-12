@@ -61,7 +61,7 @@ PPFileName = 'mesh/Mw_78_Turkey_faultreceivers.dat'
 /
             
 &MeshNml
-MeshFile = 'mesh/Turkey78_75_dip70_3'
+MeshFile = 'mesh/Turkey78_75_dip70_1'
 meshgenerator = 'PUML'                         ! Name of meshgenerator (Gambit3D-fast, Netcdf or PUML)
 /
 
@@ -80,8 +80,8 @@ LtsAutoMergeCostBaseline = 'bestWiggleFactor'
 
 &Output
 FaultOutputFlag = 1                            ! DR output (add this line only if DR is active)
-OutputFile = 'output/Turkey78_segmented_usgs_with75'
-Format = 6                                    ! Format (10= no output, 6=hdf5 output)
+OutputFile = 'output/Turkey_het_ev1'
+Format = 10                                    ! Format (10= no output, 6=hdf5 output)
 !             |stress     |vel  
 iOutputMask = 1 1 1 1 1 1 1 1 1
 iPlasticityMask = 0 0 0 0 0 0 1
@@ -90,7 +90,7 @@ TimeInterval = 50.00                           ! Index of printed info at time
 refinement = 1
 
 ! off-fault ascii receivers
-RFileName = 'Turkey78_withfaults_seg_usgs_with75_1_stations_proj.txt'    ! Record Points in extra file
+RFileName = 'mesh/Turkey78_withfaults_seg_usgs_with75_1_stations_proj.txt'    ! Record Points in extra file
 pickdt = 0.02                                  ! Pickpoint Sampling
 pickDtType = 1                                 ! Pickpoint Type
 ! (Optional) Synchronization point for receivers.
@@ -118,8 +118,7 @@ computeVolumeEnergiesEveryOutput = 5
 /
 
 &AbortCriteria
-EndTime = 120.
-!EndTime = 60.0
+EndTime = 150.0
 /
 
 &Analysis
