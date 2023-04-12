@@ -1,5 +1,5 @@
 !EvalModel
-parameters: [Omega, sig_zz, b_xx, b_yy, b_zz, b_xy, b_yz, b_xz]
+parameters: [Omega, sig_zz, b_xx, b_yy, b_zz, b_xy, b_yz, b_xz, bc_xx, bc_yy, bc_zz, bc_xy, bc_yz, bc_xz]
 model: !Switch
   [Omega]: !LuaMap
         returns: [Omega]
@@ -77,11 +77,23 @@ model: !Switch
                 function: |
                  function f (x)
                   -- R = 0.6 for model with subshear on hypocenter fault
-                  R = 0.8
+                  R = 0.6
                   return {
                     S = (1.0/R-1.0)
                   }
                   end
+            - !GroupFilter
+              # This is the 7.7 NS trending fault
+              groups: [69]
+              components: !LuaMap
+                returns: [S]
+                function: |
+                 function f (x)
+                  R = 0.8
+                  return {
+                    S = (1.0/R-1.0)
+                  }
+                  end                 
             - !LuaMap
                 returns: [S]
                 function: |
@@ -91,11 +103,11 @@ model: !Switch
                   if x1 > 60e3 then
                     -- this is roughly the region of the main aftershock
                     aX =  {-1e10, 80e3, 115e3, 140e3, 175e3, 1e10}
-                    aData = {0.8,   0.8,     0.8,    0.8,  0.55, 0.55}
+                    aData = {0.65,   0.65,     0.65,    0.65,  0.4, 0.4}
                   else
                     -- this is roughly the region of the mainshock
-                    aX =  {-1e10, -105e3, -85e3, 1e10}
-                    aData = {0.3, 0.3,  0.55,  0.55}
+                    aX =  {-1e10, -95e3 ,-85e3, -25e3, 35e3, 80e3, 115e3, 175e3, 1e10}
+                    aData = {0.30,0.30, 0.40, 0.450, 0.450, 0.450, 0.43, 0.35,  0.35}
                   end
                   -- this implements a linear interpolation
                   if (aX[1] > xi) or ( xi>aX[#aX] ) then
@@ -121,16 +133,18 @@ model: !Switch
         s2ratio: 0.75
         S_v: 2
   [sig_zz]: !Include Mw_78_Turkey_sig_zz.yaml
+  [bc_xx, bc_yy, bc_zz,bc_xy, bc_yz, bc_xz]: !Include Mw_78_Turkey_stress_change.yaml  
 components: !LuaMap
   returns: [s_xx, s_yy, s_zz, s_xy, s_yz, s_xz]
   function: |
      function f (x)
       return {
-        s_xx = x["Omega"] * x["b_xx"] + (1.0-x["Omega"]) * x["sig_zz"],
-        s_yy = x["Omega"] * x["b_yy"] + (1.0-x["Omega"]) * x["sig_zz"],
-        s_zz = x["Omega"] * x["b_zz"] + (1.0-x["Omega"]) * x["sig_zz"],
-        s_xy = x["Omega"] * x["b_xy"],
-        s_yz = x["Omega"] * x["b_yz"],
-        s_xz = x["Omega"] * x["b_xz"]
+        s_xx = x["Omega"] * (x["b_xx"] + x["bc_xx"]) + (1.0-x["Omega"]) * x["sig_zz"],
+        s_yy = x["Omega"] * (x["b_yy"] + x["bc_yy"]) + (1.0-x["Omega"]) * x["sig_zz"],
+        s_zz = x["Omega"] * (x["b_zz"] + x["bc_zz"]) + (1.0-x["Omega"]) * x["sig_zz"],
+        s_xy = x["Omega"] * (x["b_xy"] + x["bc_xy"]),
+        s_yz = x["Omega"] * (x["b_yz"] + x["bc_yz"]),
+        s_xz = x["Omega"] * (x["b_xz"] + x["bc_xz"])
       }
       end
+

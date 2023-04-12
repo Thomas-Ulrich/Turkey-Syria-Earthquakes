@@ -1,8 +1,1 @@
-!LuaMap
-  returns: [sig_zz]
-  function: |
-     function f (x)
-      return {
-        sig_zz = math.max(-63000000, 2670.0*0.41*9.8*math.min(-200.0,x["z"]))
-      }
-      end
+../event1/Mw_78_Turkey_sig_zz.yaml

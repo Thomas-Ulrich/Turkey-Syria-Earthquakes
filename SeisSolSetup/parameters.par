@@ -51,8 +51,7 @@ refinement = 0
 &Pickpoint
 printtimeinterval = 50                        ! Index of printed info at timesteps
 OutputMask = 1 1 1 1 1 1 1 1 1 1 1             ! turn on and off fault outputs
-nOutpoints = 8
-PPFileName = 'Mw_78_Turkey_faultreceivers.dat'
+PPFileName = 'mesh/Mw_78_Turkey_faultreceivers.dat'
 /
 
 &SourceType
@@ -62,7 +61,7 @@ PPFileName = 'Mw_78_Turkey_faultreceivers.dat'
 /
             
 &MeshNml
-MeshFile = 'mesh/Turkey78_withfaults_seg_usgs_with75_1'
+MeshFile = 'mesh/Turkey78_75_dip70_3'
 meshgenerator = 'PUML'                         ! Name of meshgenerator (Gambit3D-fast, Netcdf or PUML)
 /
 

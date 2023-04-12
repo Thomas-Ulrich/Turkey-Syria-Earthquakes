@@ -1,0 +1,17 @@
+!LuaMap
+  returns: [forced_rupture_time]
+  function: |
+      function f (x)
+        xhb = {20109.60910658,116253.58540175,-8628.}
+        r_critb = 3000.0
+        rb = math.sqrt((x["x"]-xhb[1])^2 + (x["y"]-xhb[2])^2 + (x["z"]-xhb[3])^2 )
+        Vs = 3464.0
+        if (rb <= r_critb) then
+          forced_rupture_time = rb/(0.7*Vs)+(0.081*r_critb/(0.7*Vs))*(1.0/(1.0-(rb/r_critb)^2)-1.0)
+        else
+          forced_rupture_time = 1000000000.0
+        end
+        return {
+          forced_rupture_time = forced_rupture_time
+        }
+      end
