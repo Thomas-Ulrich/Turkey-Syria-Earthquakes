@@ -1,0 +1,6 @@
+!Switch
+[rho, mu, lambda, plastCo]: !Include Mw_78_Turkey_rhomulambda1D_Guvercin_et_al.yaml
+[bulkFriction]: !ConstantMap
+  map:
+    bulkFriction: 0.6
+[s_xx, s_yy, s_zz, s_xy, s_yz, s_xz]: !Include Mw_78_Turkey_initial_stress.yaml

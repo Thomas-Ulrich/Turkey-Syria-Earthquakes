@@ -1,0 +1,41 @@
+!Switch
+[bc_xx, bc_yy, bc_zz]: !EvalModel
+    parameters: [c_xx, c_yy, c_zz]
+    model: !Switch
+      [c_xx, c_yy, c_zz]: !Any
+         components: !Any
+           - !ASAGI
+               file: StressChange_filt_v5_joint_ASAGI.nc
+               parameters: [c_xx, c_yy, c_zz, c_xy, c_yz, c_xz]
+               var: data
+               interpolation: linear   
+           - !ConstantMap
+             map:
+               c_xx: 0.0
+               c_yy: 0.0
+               c_zz: 0.0
+    components: !FunctionMap
+       map:
+         bc_xx: return c_xx;
+         bc_yy: return c_yy;
+         bc_zz: return c_zz;
+[bc_xy, bc_yz, bc_xz]: !EvalModel
+    parameters: [c_xy, c_yz, c_xz]
+    model: !Switch
+      [c_xy, c_yz, c_xz]: !Any
+         components: !Any
+           - !ASAGI
+               file: StressChange_filt_v5_joint_ASAGI.nc
+               parameters: [c_xx, c_yy, c_zz, c_xy, c_yz, c_xz]
+               var: data
+               interpolation: linear
+           - !ConstantMap
+             map:
+               c_xy: 0.0
+               c_yz: 0.0
+               c_xz: 0.0
+    components: !FunctionMap
+       map:
+         bc_xy: return c_xy;
+         bc_yz: return c_yz;
+         bc_xz: return c_xz;      

@@ -1,0 +1,52 @@
+!Switch
+[mu_s, mu_d, Tnuc_n, Tnuc_s, Tnuc_d]: !ConstantMap
+  map:
+    mu_s: 0.6
+    mu_d: 0.2
+    Tnuc_n: 0
+    Tnuc_s: 0
+    Tnuc_d: 0
+
+[d_c]: !Any
+  components:
+    #faults of the second event (except the small one)
+    - !GroupFilter
+      groups: [67]
+      components: !ConstantMap
+        map:
+          d_c: 1.0
+    - !ConstantMap
+        map:
+          d_c: 0.5
+[forced_rupture_time]: !LuaMap
+  returns: [forced_rupture_time]
+  function: |
+      function f (x)
+        xhb = {20109.60910658,116253.58540175,-8628.}
+        r_critb = 3000.0
+        rb = math.sqrt((x["x"]-xhb[1])^2 + (x["y"]-xhb[2])^2 + (x["z"]-xhb[3])^2 )
+        Vs = 3464.0
+        if (rb <= r_critb) then
+          forced_rupture_time = rb/(0.7*Vs)+(0.081*r_critb/(0.7*Vs))*(1.0/(1.0-(rb/r_critb)^2)-1.0)
+        else
+          forced_rupture_time = 1000000000.0
+        end
+        return {
+          forced_rupture_time = forced_rupture_time
+        }
+      end
+[cohesion]: !LuaMap
+  returns: [cohesion]
+  function: |
+   function f (x)
+    z = x["z"]
+    cohesion = -0.5e6
+    zIncreasingCohesion = 6000.0
+    if (z >= -zIncreasingCohesion) then
+      cohesion = cohesion - 1.0e6 * (z+zIncreasingCohesion)/zIncreasingCohesion;
+    end
+    return {
+      cohesion = cohesion
+    }
+    end
+[s_xx, s_yy, s_zz, s_xy, s_yz, s_xz]: !Include Mw_78_Turkey_initial_stress_fault.yaml
