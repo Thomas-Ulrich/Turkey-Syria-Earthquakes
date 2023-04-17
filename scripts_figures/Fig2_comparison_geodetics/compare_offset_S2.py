@@ -212,6 +212,14 @@ if args.event[0] == 2:
 
 if not os.path.exists("output"):
     os.makedirs("output")
+
+if args.event[0] == 2:
+    plt.text(.02, .95, 'W', ha='left', va='top', transform=ax.transAxes)
+    plt.text(.98, .95, 'E', ha='right', va='top', transform=ax.transAxes)
+else:
+    plt.text(.02, .95, 'SW', ha='left', va='top', transform=ax.transAxes)
+    plt.text(.98, .95, 'NE', ha='right', va='top', transform=ax.transAxes)
+
 fn = f"output/comparison_offset_{event}.svg"
 plt.savefig(fn, dpi=200, bbox_inches="tight")
 print(f"done writing {fn}")
