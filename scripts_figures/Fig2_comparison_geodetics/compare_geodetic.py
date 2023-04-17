@@ -244,6 +244,23 @@ c = ax[0].pcolormesh(
     vmin=vmin,
     vmax=vmax,
 )
+if args.band[0] in ["azimuth", "range"]:
+    theta = 10
+    ax[0].quiver(
+            [38.2, 38.2],
+            [37.8, 37.8],
+            [np.cos(np.radians(theta)), -np.sin(np.radians(theta))],
+            [np.sin(np.radians(theta)), np.cos(np.radians(theta))],
+            scale=10.,
+            angles="xy",
+            units="width",
+            color="k",
+            width=0.004,
+            zorder=1,
+        )
+    ax[0].text(38.2, 37.73, 'range', rotation=10)
+    ax[0].text(38.07, 37.8, 'azimuth', rotation=100)
+
 
 if args.surface:
     lons, lats, lonlat_barycenter, connect, U, V, W = read_seissol_surface_data(
@@ -276,11 +293,10 @@ if args.surface:
         )
         # syn_to_plot = np.reshape(syn_to_plot, (np.max(np.shape(vx)), np.min(np.shape(vx))))
 
-    if args.diff:
-        # interpolate satellite displacement on the unstructured grid
-        obs_inter = RGIinterp(lon_g, lat_g, obs_to_plot, lonlat_barycenter)
-        print(args.band[0], np.nanstd(syn_to_plot - obs_inter))
-
+    #if args.diff:
+    # interpolate satellite displacement on the unstructured grid
+    obs_inter = RGIinterp(lon_g, lat_g, obs_to_plot, lonlat_barycenter)
+    syn_to_plot[np.isnan(obs_inter)] = np.nan
     ax[1].tripcolor(
         lons,
         lats,
