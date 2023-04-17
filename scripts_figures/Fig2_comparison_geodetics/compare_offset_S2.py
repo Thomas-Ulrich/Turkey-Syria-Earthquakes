@@ -168,9 +168,10 @@ for i, fn in enumerate(args.fault):
     ns = np.abs(slip_at_trace * strike[:, 1])
 
     if args.event[0] == 1:
+        ids = df["ns_offset"].notna()
         ax.plot(
-            acc_dist,
-            ns,
+            acc_dist[ids],
+            ns[ids],
             "royalblue",
             linewidth=lw * (1 + 0.5 * i),
             label="Predicted NS offset",

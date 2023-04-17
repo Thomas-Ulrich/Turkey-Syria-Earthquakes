@@ -89,7 +89,7 @@ figall, axarr = InitializeSeveralStationsFigure(
 
 
 lFolderprefix = [
-    "/home/ulrich/trash/receiversTS23/Turkey78",
+    "/home/ulrich/trash/receiversTS23b/Turkey_2events_31mio_o5_2603_s205",
 ]
 
 use_filter = True

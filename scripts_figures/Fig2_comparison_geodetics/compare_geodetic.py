@@ -250,6 +250,7 @@ if args.surface:
         args.surface[0]
     )
     # this is an inset axes over the main axes
+    # Only work with matplotlib >= 3.6!
     ax.append(ax[0].inset_axes([0.45, 0.01, 0.54, 0.54], projection=ccrs.PlateCarree()))
     setup_map(ax[1], gridlines_left=False, draw_labels=False)
 

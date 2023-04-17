@@ -69,9 +69,9 @@ RawStationFile = "../../ThirdParty/stations.csv"
 
 
 stations2plot = [
+    "4616",
     "4612",
     "4611",
-    "4616",
     "0213",
     "4406",
 ]
@@ -85,7 +85,7 @@ figall, axarr = InitializeSeveralStationsFigure(
 
 
 lFolderprefix = [
-    "/home/ulrich/trash/receiversTS23/Turkey78",
+    "/home/ulrich/trash/receiversTS23b/Turkey_2events_31mio_o5_2603_s205",
 ]
 t0_2nd = [150]
 

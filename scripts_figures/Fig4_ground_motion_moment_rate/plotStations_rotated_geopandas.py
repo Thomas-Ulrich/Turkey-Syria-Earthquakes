@@ -39,8 +39,8 @@ stations2plot1 = [
 
 stations2plot2 = [
     "4612",
-    "4628",
     "4611",
+    "4616",
     "0213",
     "4406",
 ]
@@ -48,6 +48,7 @@ stations2plot2 = [
 stations2plot_common = [
     "4611",
     "0213",
+    "4616",
 ]
 
 
@@ -55,7 +56,7 @@ stations2plot_common = [
 angle = 180 + 90 + 50
 angle = 40
 
-for fn in ["../ThirdParty/Turkey_Emergency_EQ_Data/simple_fault_2023-02-17/simple_fault_2023-2-17.shp"]:
+for fn in ["../../ThirdParty/Turkey_Emergency_EQ_Data/simple_fault_2023-02-17/simple_fault_2023-2-17.shp"]:
     df = gpd.read_file(fn)
     print(df)
     glist = gpd.GeoSeries([g for g in df["geometry"]])
@@ -64,28 +65,28 @@ for fn in ["../ThirdParty/Turkey_Emergency_EQ_Data/simple_fault_2023-02-17/simpl
 
 col =  ['m', 'b']
 for i, stations2plot in enumerate([stations2plot1, stations2plot2]):
-    df = pd.read_csv("../ThirdParty/stations.csv")
-    df = df.drop_duplicates(subset=['Code'])
-    df["waveform_to_plot"] = [row["Code"] in stations2plot for index, row in df.iterrows()]
+    df = pd.read_csv("../../ThirdParty/stations.csv")
+    df = df.drop_duplicates(subset=['codes'])
+    df["waveform_to_plot"] = [row["codes"] in stations2plot for index, row in df.iterrows()]
     df = df.loc[df["waveform_to_plot"] == True]
 
-    geometry = [Point(xy) for xy in zip(df["Longitude"], df["Latitude"])]
+    geometry = [Point(xy) for xy in zip(df["lons"], df["lats"])]
     gdf = gpd.GeoDataFrame(df, geometry=geometry, crs=4326)
     gdf = gdf.rotate(angle, origin=(0, 0))
 
-    for x, y, label in zip(gdf.geometry.x, gdf.geometry.y, df["Code"]):
+    for x, y, label in zip(gdf.geometry.x, gdf.geometry.y, df["codes"]):
         ax.annotate(label+"  ", xy=(x, y), xytext=(3, -3), textcoords="offset points")
     ax.axis('off')
 
     gdf.plot(ax=ax, color=col[i])
 
 for i, stations2plot in enumerate(stations2plot_common):
-    df = pd.read_csv("../ThirdParty/stations.csv")
-    df = df.drop_duplicates(subset=['Code'])
-    df["waveform_to_plot"] = [row["Code"] in stations2plot for index, row in df.iterrows()]
+    df = pd.read_csv("../../ThirdParty/stations.csv")
+    df = df.drop_duplicates(subset=['codes'])
+    df["waveform_to_plot"] = [row["codes"] in stations2plot for index, row in df.iterrows()]
     df = df.loc[df["waveform_to_plot"] == True]
 
-    geometry = [Point(xy) for xy in zip(df["Longitude"], df["Latitude"])]
+    geometry = [Point(xy) for xy in zip(df["lons"], df["lats"])]
     gdf = gpd.GeoDataFrame(df, geometry=geometry, crs=4326)
     gdf = gdf.rotate(angle, origin=(0, 0))
 
