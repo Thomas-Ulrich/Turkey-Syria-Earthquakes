@@ -10,6 +10,7 @@ from pyproj import Transformer
 import matplotlib
 import scipy.interpolate as interp
 from pathlib import Path
+import os
 
 # from matplotlib import font_manager
 # font_manager.findSystemFonts(fontpaths=None, fontext="ttf")
@@ -22,6 +23,8 @@ matplotlib.rc("ytick", labelsize=ps)
 
 # Custom font for station name
 fpath = Path('/usr/local/share/fonts/Poppins-Light.ttf')
+if not os.path.isfile(fpath):
+    fpath = "sans" 
 
 def setup_map(ax, extentmap, gridlines_left=True, draw_labels=True):
     """Setup the background map with cartopy"""
@@ -36,9 +39,7 @@ def setup_map(ax, extentmap, gridlines_left=True, draw_labels=True):
     gl.right_labels = False
     gl.top_labels = False
     gl.left_labels = gridlines_left
-    for fn in [
-        "/home/mathilde/Bureau/Work/Turquie/data/fault_trace/Turkey_Emergency_EQ_Data/Turkey_Emergency_EQ_Data/simple_fault_2023-02-28/simple_fault_2023-02-28.shp"
-    ]:
+    for fn in ["../../ThirdParty/Turkey_Emergency_EQ_Data/simple_fault_2023-02-17/simple_fault_2023-2-17.shp"]:
         sf = shp.Reader(fn)
         for sr in sf.shapeRecords():
             listx = []
@@ -140,7 +141,7 @@ print(f"Plot {arg.component[0]} GPS comparison for event {arg.event[0]}")
 event = np.int64(arg.event[0])
  
 # Read GPS data
-gps = '/home/mathilde/Bureau/Work/Turquie/data/GPS/GPS_turkey_sequence.csv'
+gps = '../../ThirdParty/gps_turkey_sequence.csv'
 df = pd.read_csv(gps)
 
 # Read SeisSol output and interpolate output to GPS data point locations
