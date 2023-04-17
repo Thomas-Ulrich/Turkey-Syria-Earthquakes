@@ -208,7 +208,7 @@ for i, fn in enumerate(args.fault):
     print(f"{fn}: (Chi2 Chi2_ew Chi2_ns) = {Chi} {Chi2_ew} {Chi2_ns}")
 
 if args.event[0] == 2:
-    ax.legend(frameon=False, loc="lower center")
+    ax.legend(frameon=False, loc="lower center", reverse=True, labelspacing=1.2)
 
 if not os.path.exists("output"):
     os.makedirs("output")
