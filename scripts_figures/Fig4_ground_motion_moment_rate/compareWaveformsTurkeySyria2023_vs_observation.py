@@ -71,6 +71,7 @@ stations2plot = [
     "0213",
     "4611",
     "4615",
+    "NAR",
     "4625",
     "4616",
     "2712",
@@ -135,6 +136,10 @@ for i, station in enumerate(stations2plot):
     fn = f"{pathObservations}/20230206011732_{station}_ap_Acc.mseed"
     if not os.path.isfile(fn):
         fn = f"{pathObservations}/20230206011732_{station}_mp_Acc.mseed"
+    if station == "NAR":
+        fn = f"{pathObservations}/TU.NAR.HN.mseed"
+    elif station == "KHMN":
+        fn = f"{pathObservations}/KO.KHMN.HN.mseed"
     st_obs = read(fn, format="MSEED")
     # scale to m/s
     for j, comp in enumerate(["E", "N", "Z"]):

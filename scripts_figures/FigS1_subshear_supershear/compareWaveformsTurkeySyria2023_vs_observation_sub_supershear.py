@@ -6,10 +6,6 @@ import os
 from pyproj import Transformer
 import matplotlib.pyplot as plt
 import groundMotionRoutines as gmr
-from readStrongMotionNepal import (
-    create_stream_from_raw_ascii_file_Nepal,
-    create_stream_from_processed_sac_Nepal,
-)
 import numpy as np
 from obspy import read
 import matplotlib
@@ -56,58 +52,27 @@ def InitializeSeveralStationsFigure(
     return [figall, axarr]
 
 
-def compileInvLUTGM(folderprefix, idlist, inventory=None):
-    StationLookUpTable = {}
-    transformer = Transformer.from_crs(myproj, lla, always_xy=True)
-    id_not_found = []
-    for i, idStation in enumerate(idlist):
-        # Load SeisSol and obspy traces
-        xyzs = gmr.ReadSeisSolSeismogram(folderprefix, idStation, coords_only=True)
-        if not xyzs:
-            id_not_found.append(idStation)
-            continue
-        lonlatdepth = transformer.transform(xyzs[0], xyzs[1], xyzs[2])
-        station = False
-        if inventory:
-            station = gmr.findStationFromInventory(inventory, lonlatdepth)
-        if not station:
-            station = gmr.findStationFromCoordsInRawFile(
-                RawStationFile, lonlatdepth, stations2plot
-            )
-        if station:
-            StationLookUpTable[idStation] = station
-    if id_not_found:
-        print(f"no SeisSol receiver with id {id_not_found}")
-    print(StationLookUpTable)
-    invStationLookUpTable = {v: k for k, v in StationLookUpTable.items()}
-    return invStationLookUpTable
-
-
-workingFolder = "/home/ulrich/work/Mw_78_Turkey/Turkey-Syria-Earthquakes/groundMotions"
-RawStationFile = workingFolder + "/HighRateGPSdata/cGPScoordsWGS84_GPS.dat"
 components = ["E", "N", "Z"]
-#components = ["E", "N"]
+# components = ["E", "N"]
 ncol_per_component = 1
-
 
 t1 = UTCDateTime(2023, 2, 6, 1, 17, 35.0)
 t2 = t1 + 250
 tplot_max = 100.0
 
-pathObservations = "../ThirdParty/strongMotionData_mainshock"
+pathObservations = "../../ThirdParty/strong_motion_data/processed/us6000jllz"
 use_filter = True
 # use_filter=False
 
-RawStationFile = "../ThirdParty/stations.csv"
-
+RawStationFile = "../../ThirdParty/stations.csv"
 
 stations2plot = [
     "4611",
     "4615",
+    "NAR",
     "4625",
     "4616",
 ]
-
 
 comp2dir = {"E": "EW", "N": "NS", "Z": "UD"}
 directions = [comp2dir[comp] for comp in components]
@@ -115,16 +80,14 @@ figall, axarr = InitializeSeveralStationsFigure(
     len(stations2plot), ncol_per_component, directions
 )
 
-lFolderprefix = ["/home/ulrich/trash/receiversTS23/trash",
-"/home/ulrich/trash/receiversTS23/Turkey78_segmented_usgs_with75_26mio_o5"]
-
-#lFolderprefix = ["/home/ulrich/trash/receiversTS23/Turkey78_segmented_usgs_with75_26mio_o5"]
-lFolderprefix = ["/home/ulrich/trash/receiversTS23/test1_180", "/home/ulrich/trash/receiversTS23/test1_180_subshear"]
+lFolderprefix = [
+    "/home/ulrich/trash/receiversTS23/test1_180",
+    "/home/ulrich/trash/receiversTS23/test1_180_subshear",
+]
 
 use_filter = True
 plot_spectras = False
 plot_spectrograms = False
-idlist = range(1, 509)
 
 plotdir = "./output/"
 ext = "svg"
@@ -143,8 +106,11 @@ print("compiling lookup table...")
 lInvStationLookUpTable = []
 inventory = None
 nsyn = len(lFolderprefix)
+transformer = Transformer.from_crs(myproj, lla, always_xy=True)
 for folderprefix in lFolderprefix:
-    lInvStationLookUpTable.append(compileInvLUTGM(folderprefix, idlist, inventory))
+    lInvStationLookUpTable.append(
+        gmr.compileInvLUTGM(folderprefix, transformer, asciiStationFile=RawStationFile)
+    )
 
 figall, axarr = InitializeSeveralStationsFigure(
     len(stations2plot), ncol_per_component, directions
@@ -157,12 +123,15 @@ def compute_j0(i, j, nrows, ncol_per_component):
     return j * ncol_per_component + i // nrows
 
 
-transformer = Transformer.from_crs(myproj, lla, always_xy=True)
 for i, station in enumerate(stations2plot):
     i0 = i % nrows
     fn = f"{pathObservations}/20230206011732_{station}_ap_Acc.mseed"
     if not os.path.isfile(fn):
         fn = f"{pathObservations}/20230206011732_{station}_mp_Acc.mseed"
+    if station == "NAR":
+        fn = f"{pathObservations}/TU.NAR.HN.mseed"
+    elif station == "KHMN":
+        fn = f"{pathObservations}/KO.KHMN.HN.mseed"
     st_obs = read(fn, format="MSEED")
     # scale to m/s
     for j, comp in enumerate(["E", "N", "Z"]):
@@ -174,13 +143,13 @@ for i, station in enumerate(stations2plot):
     for idsyn in range(nsyn):
         try:
             idStation = lInvStationLookUpTable[idsyn][station]
-            xyzs, variablelist, synth = gmr.ReadSeisSolSeismogram(
+            xyzs, variablelist, synth = gmr.readSeisSolSeismogram(
                 lFolderprefix[idsyn], idStation
             )
             lonlatdepth = transformer.transform(xyzs[0], xyzs[1], xyzs[2])
             tplot_max = np.amax(synth[0, :])
             print(station, xyzs)
-            syn_str = gmr.CreateObspyTraceFromSeissolSeismogram(
+            syn_str = gmr.createObspyTraceFromSeissolReceiverData(
                 station, variablelist, synth, t1
             )
             aSt_syn.append(syn_str)
@@ -256,7 +225,7 @@ for i, station in enumerate(stations2plot):
 
 for j in range(axarr.shape[1]):
     figall.align_ylabels(axarr[:, j])
-figall.subplots_adjust(wspace=0.3 if ncol_per_component > 1 else 0.1)
+figall.subplots_adjust(wspace=0.3 if ncol_per_component > 1 else 0.2)
 
 fn = f"{plotdir}/allDxyz{filterdesc}_sub_supershear.{ext}"
 figall.savefig(fn, bbox_inches="tight")
