@@ -118,7 +118,7 @@ computeVolumeEnergiesEveryOutput = 5
 /
 
 &AbortCriteria
-EndTime = 150.0
+EndTime = 150.
 /
 
 &Analysis
