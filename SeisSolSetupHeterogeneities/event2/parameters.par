@@ -74,7 +74,7 @@ LtsWiggleFactorMin = 0.51                      ! Minimal wiggle factor applied t
 LtsWiggleFactorStepsize = 0.08                 ! Stepsize for wiggle factor grid search
 LtsWiggleFactorEnforceMaximumDifference = 0    ! 0 or 1: Enforces the maximum difference between neighboring clusters during wiggle factor search
 LtsAutoMergeClusters = 1                       !  0 or 1: Activates auto merging of clusters
-LtsAllowedRelativePerformanceLossAutoMerge = 0.25 ! Find minimal max number of clusters such that new computational cost is at most increased by this factor
+LtsAllowedRelativePerformanceLossAutoMerge = 0.15 ! Find minimal max number of clusters such that new computational cost is at most increased by this factor
 LtsAutoMergeCostBaseline = 'bestWiggleFactor'
 /
 
