@@ -33,7 +33,8 @@ XRef = -0.1                                    ! Reference point
 YRef = 0.0
 ZRef = -1.0
 refPointMethod = 1
-OutputPointType = 5                            ! Type (0: no output, 3: ascii file, 4: paraview file, 5: 3+4)
+OutputPointType = 4                            ! Type (0: no output, 3: ascii file, 4: paraview file, 5: 3+4)
+SlipRateOutputType=0
 /
 
 !see: https://seissol.readthedocs.io/en/latest/fault-output.html
@@ -67,7 +68,6 @@ meshgenerator = 'PUML'                         ! Name of meshgenerator (Gambit3D
 
 &Discretization
 CFL = 0.5                                      ! CFL number (<=1.0)
-FixTimeStep = 5                                ! Manualy chosen minimum time
 ClusteredLTS = 2                               ! 1 for Global time stepping, 2,3,5,... Local time stepping (advised value 2)
 !ClusteredLTS defines the multi-rate for the time steps of the clusters 2 for Local time stepping
 LtsWiggleFactorMin = 0.51                      ! Minimal wiggle factor applied to time step size. Should be > 1/rate
@@ -118,8 +118,7 @@ computeVolumeEnergiesEveryOutput = 5
 /
 
 &AbortCriteria
-EndTime = 120.
-!EndTime = 60.0
+EndTime = 150.
 /
 
 &Analysis
