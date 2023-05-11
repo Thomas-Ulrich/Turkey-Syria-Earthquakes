@@ -28,7 +28,7 @@ parser.add_argument(
     nargs=1,
     help="1: mainshock, 2: aftershock, both: both",
     choices=["both", "1", "2"],
-    default="both",
+    default=["both"],
 )
 
 parser.add_argument(
@@ -68,10 +68,10 @@ dt = synth[1, 0]
 
 split = int(time_split / dt)
 
-if args.event == "both":
+if args.event[0] == "both":
     print(f"computing for both events, with time split {time_split}")
     levid = ["us6000jllz", "us6000jlqa"]
-elif args.event == "1":
+elif args.event[0] == "1":
     print(f"computing for mainshock only (whole simulation)")
     levid = ["us6000jllz"]
 else:
