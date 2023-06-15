@@ -132,7 +132,7 @@ for type in ["obs", "syn"]:
         rup = quad_rupture.QuadRupture(gj, org)
 
         # Compute JB distances
-        df["dists"] = rup.computeRjb(stalats, stalons, stadeps)[0]
+        df["dists"] = rup.computeRjb(lon=stalons, lat=stalats, depth=stadeps)[0]
         df = df[df.dists < max_distance]
         dx = DistancesContext()
         dx.rjb = np.linspace(1, 1000, 1000)
