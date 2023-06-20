@@ -11,6 +11,18 @@ import matplotlib.pyplot as plt
 import cartopy.io.img_tiles as cimgt
 from impactutils.mapping.scalebar import draw_scale
 import argparse
+from impactutils.rupture import quad_rupture, origin
+import geojson        
+from cmcrameri import cm
+
+# Matplotlib settings
+plt.rcParams["font.sans-serif"] = "Arial"
+plt.rcParams["font.size"] = 13
+plt.rcParams["axes.grid"] = True
+plt.rcParams["grid.alpha"] = 0.1
+plt.rcParams["savefig.dpi"] = 500
+plt.rcParams["savefig.bbox"] = "tight"
+
 
 # parsing python arguments
 parser = argparse.ArgumentParser(description="plot map comparing observed/synthetic PGAs or PGVs for both events")
@@ -126,5 +138,5 @@ cbar_ax = fig.add_axes([0.9, 0.35, 0.02, 0.3])
 cbar = fig.colorbar(im, cax=cbar_ax)
 cbar.set_label('PGA time (s after origin time)', fontsize=20)
 plt.subplots_adjust(hspace=0.1, wspace=0.1)
-plt.savefig('pga_times_obs_simulated.pdf', bbox_inches='tight')
+plt.savefig(f'{PGA_PGV}_times_obs_simulated.pdf', bbox_inches='tight')
 plt.show()
