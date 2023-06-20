@@ -1,10 +1,22 @@
 import numpy as np
-a = np.loadtxt('../ThirdParty/vel1d_Guvercin_et_al.txt', skiprows=0)
-n = int(a.shape[0]//3)
-a = a.reshape((n,3))
-a[0,0] = -10
-a[-1,0] = 1000
+
+a = np.loadtxt("../ThirdParty/vel1d_Guvercin_et_al.txt", skiprows=0)
+n = int(a.shape[0] // 3)
+a = a.reshape((n, 3))
+a[0, 0] = -10
+a[-1, 0] = 1000
 print(a)
+import matplotlib.pylab as plt
+
+fig, ax = plt.subplots()
+ax.plot(a[:, 1], a[:, 0], label="Vp")
+ax.plot(a[:, 2], a[:, 0], label="Vs")
+plt.ylim([0, 100])
+plt.ylabel("depth")
+plt.xlabel("velocity (km/s)")
+ax.invert_yaxis()
+plt.legend()
+plt.show()
 
 towrite_luamap = """!LuaMap
 returns: [rho, mu, lambda, plastCo]
@@ -33,12 +45,20 @@ towrite = """!LayeredModel
   parameters: [rho, mu, lambda, plastCo]
   nodes:
 """
+
+
 def vsrhomulambda(VP, VS):
-    rho = 1.6612*VP-0.4721*VP**2+0.0671*VP**3-0.0043*VP**4+0.000106*VP**5
-    G = rho*VS*VS
-    lambdax = 1e9*rho*(VP**2-2.*VS**2)
-    rho = 1e3*rho
-    mu = 1e9*G
+    rho = (
+        1.6612 * VP
+        - 0.4721 * VP**2
+        + 0.0671 * VP**3
+        - 0.0043 * VP**4
+        + 0.000106 * VP**5
+    )
+    G = rho * VS * VS
+    lambdax = 1e9 * rho * (VP**2 - 2.0 * VS**2)
+    rho = 1e3 * rho
+    mu = 1e9 * G
     return VS, rho, mu, lambdax
 
 
@@ -49,14 +69,16 @@ for i, row in enumerate(a):
     vs, rho, mu, lambdax = vsrhomulambda(vp, vs)
 
     print(f"{depth} & {rho:.1f} & {vs} & {vp} \\\\")
-    #print(-depth*1e3, mu)
-    aData[i,:] = -depth*1e3, rho, mu, lambdax
+    # print(-depth*1e3, mu)
+    aData[i, :] = -depth * 1e3, rho, mu, lambdax
     towrite += f"      {-depth*1000}: [{rho}, {mu}, {lambdax}, {mu*0.0004}]\n"
 
 aData = np.flip(aData, axis=0)
 
 for i, row in enumerate(aData):
-    towrite_luamap += f"    aX[{i+1}] = " + "{" + ",".join([str(val) for val in aData[i,:]])  + "}\n"
+    towrite_luamap += (
+        f"    aX[{i+1}] = " + "{" + ",".join([str(val) for val in aData[i, :]]) + "}\n"
+    )
 
 towrite_luamap += """
     if (aX[1][1] > xi) or ( xi>aX[#aX][1] ) then
@@ -76,12 +98,12 @@ towrite_luamap += """    for i in pairs(aX) do
 """
 
 
-fn = 'Mw_78_Turkey_rhomulambda1D_Guvercin_et_al.yaml'
-with open(fn, 'w') as fid:
+fn = "Mw_78_Turkey_rhomulambda1D_Guvercin_et_al.yaml"
+with open(fn, "w") as fid:
     fid.write(towrite)
-print(f'done writing {fn}')
-fn = 'Mw_78_Turkey_rhomulambda1D_Guvercin_et_al_lua.yaml'
-with open(fn, 'w') as fid:
+print(f"done writing {fn}")
+fn = "Mw_78_Turkey_rhomulambda1D_Guvercin_et_al_lua.yaml"
+with open(fn, "w") as fid:
     fid.write(towrite_luamap)
     fid.write(towrite_luamap_end)
-print(f'done writing {fn}')
+print(f"done writing {fn}")
