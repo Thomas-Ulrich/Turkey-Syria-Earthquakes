@@ -134,6 +134,14 @@ for type in ["obs", "syn"]:
         # Compute JB distances
         df["dists"] = rup.computeRjb(lon=stalons, lat=stalats, depth=stadeps)[0]
         df = df[df.dists < max_distance]
+        print('using minimum distance of 1.2')
+        df['dists'] = df['dists'].apply(lambda x: max(1.2, x))
+        if i==0:
+            clipped = ['0208', '0210', '0214', '0215', '2707', '2709',
+                       '3144', '4413', '4629', '4630', '4631', '7901']
+        else:
+            clipped = ['2304', '4001', '4209', '4408', '4631']
+        df = df[~df['codes'].isin(clipped)]
         dx = DistancesContext()
         dx.rjb = np.linspace(1, 1000, 1000)
 
@@ -204,7 +212,12 @@ for type in ["obs", "syn"]:
             zorder=10,
             label=label,
         )
-
+        """
+        # label each point
+        if type == "obs":
+            for dis, pg, code in zip(df.dists, obs, df.codes):
+                ax.text(max(1.5,dis), max(2e-3, pg), code, c=color, fontsize=5)
+        """
         # Plot data
         ax.scatter(
             df.dists,
