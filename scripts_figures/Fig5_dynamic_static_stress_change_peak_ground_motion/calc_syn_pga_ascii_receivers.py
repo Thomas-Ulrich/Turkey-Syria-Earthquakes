@@ -82,14 +82,16 @@ for evid in levid:
     df = pd.read_csv(asciiStationFile)
     # check is station is in refined area
     x, y = TRANSFORMER_INV.transform(df.lons, df.lats)
-    ref_region_theta = np.radians(45)
+
+    ref_region_theta = np.radians(0.)
     ct = np.cos(ref_region_theta)
     st = np.sin(ref_region_theta)
-    ref_region_xc = 20e3
-    ref_region_yc = 50e3
+    ref_region_xc = 50e3
+    ref_region_yc = 60e3
     df["u"] = (x - ref_region_xc) * ct + (y - ref_region_yc) * st
     df["v"] = (x - ref_region_xc) * -st + (y - ref_region_yc) * ct
-    df = df[(abs(df.u) < 200e3) & (abs(df.v) < 100e3)]
+    print('selecting only stations in refined area (frontera mesh)')
+    df = df[(abs(df.u) < 380e3) & (abs(df.v) < 380e3)]
     print(df)
 
     if args.event == "both":
