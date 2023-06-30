@@ -265,6 +265,18 @@ ax[0].text(
     verticalalignment="center",
 )
 
+# Compute RMS
+res1 = ui - ew
+res2 = vi - ns
+res3 = wi - dz
+N = max(np.shape(res1))
+rms1 = np.sqrt(np.nansum(res1**2)/N);
+rms2 = np.sqrt(np.nansum(res2**2)/N);
+rms3 = np.sqrt(np.nansum(res3**2)/N);
+rmstot = np.sqrt(rms1**2 + rms2**2 + rms3**2)
+print('RMS GPS:',np.round(rmstot,5),'m')
+
+
 # Write .png file
 fn = f"output/comp_GPS_event_{event}_comp_{arg.component[0]}.png"
 plt.savefig(fn, dpi=300, bbox_inches="tight")
