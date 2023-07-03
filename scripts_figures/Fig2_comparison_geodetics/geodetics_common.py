@@ -117,3 +117,7 @@ def compute_LOS_displacement_SeisSol_data_from_LOS_vector(
     vz_inter = RGIinterp(lon_g, lat_g, vz, lonlat_barycenter)
     D_los = U * vx_inter + V * vy_inter + W * vz_inter
     return -D_los
+
+
+def nanrms(x, axis=None):
+    return np.sqrt(np.nanmean(x**2, axis=axis))
