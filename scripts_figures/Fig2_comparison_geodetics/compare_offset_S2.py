@@ -79,10 +79,10 @@ plt.rc("font", family="FreeSans", size=8)
 # plt.rcParams["text.usetex"] = True
 
 if args.event[0] == 1:
-    fn = "../../ThirdParty/offset_sentinel2.txt"
+    fn = "../../ThirdParty/offset_sentinel2_event1_v2.txt"
     event = "mainshock"
 else:
-    fn = "../../ThirdParty/EW_offset_sentinel2_Mw75.txt"
+    fn = "../../ThirdParty/offset_sentinel2_event2_v2.txt"
     event = "2nd"
 
 df = pd.read_csv(fn, sep=" ")
@@ -109,30 +109,18 @@ ax.get_xaxis().tick_bottom()
 ax.get_yaxis().tick_left()
 
 lw = 0.8
-if args.event[0] == 1:
-    ax.errorbar(
-        acc_dist,
-        df["ns_offset"],
-        yerr=df["ns_error"],
-        color="royalblue",
-        linestyle="-",
-        linewidth=lw / 2.0,
-        label="Sentinel 2 NS offset",
-        marker="o",
-        markersize=2,
-    )
-else:
-    ax.errorbar(
-        np.nan,
-        np.nan,
-        yerr=np.nan,
-        color="royalblue",
-        linestyle="-",
-        linewidth=lw / 2.0,
-        label="Sentinel 2 NS offset",
-        marker="o",
-        markersize=2,
-    )
+ax.errorbar(
+    acc_dist,
+    df["ns_offset"],
+    yerr=df["ns_error"],
+    color="royalblue",
+    linestyle="-",
+    linewidth=lw / 2.0,
+    label="Sentinel 2 NS offset",
+    marker="o",
+    markersize=2,
+)
+
 ax.errorbar(
     acc_dist,
     df["ew_offset"],
@@ -167,23 +155,14 @@ for i, fn in enumerate(args.fault):
     ew = np.abs(slip_at_trace * strike[:, 0])
     ns = np.abs(slip_at_trace * strike[:, 1])
 
-    if args.event[0] == 1:
-        ids = df["ns_offset"].notna()
-        ax.plot(
-            acc_dist[ids],
-            ns[ids],
-            "royalblue",
-            linewidth=lw * (1 + 0.5 * i),
-            label="Predicted NS offset",
-        )
-    else:
-        ax.plot(
-            np.nan,
-            np.nan,
-            "royalblue",
-            linewidth=lw * (1 + 0.5 * i),
-            label="Predicted NS offset",
-        )
+    ids = df["ns_offset"].notna()
+    ax.plot(
+        acc_dist[ids],
+        ns[ids],
+        "royalblue",
+        linewidth=lw * (1 + 0.5 * i),
+        label="Predicted NS offset",
+    )
     ax.plot(
         acc_dist,
         ew,
@@ -191,21 +170,25 @@ for i, fn in enumerate(args.fault):
         linewidth=lw * (1 + 0.5 * i),
         label="Predicted EW offset",
     )
-    if args.event[0] == 1:
-        ids = df["ns_offset"].notna()
-        Chi2_ns = np.sum(
-            (ns[ids] - df["ns_offset"][ids].to_numpy()) ** 2
-            / df["ns_error"][ids].to_numpy() ** 2
-        )
-    else:
-        Chi2_ns = 0.0
+    ids = df["ns_offset"].notna()
+    Chi2_ns = np.sum(
+        (ns[ids] - df["ns_offset"][ids].to_numpy()) ** 2
+        / df["ns_error"][ids].to_numpy() ** 2
+    )
     ids = df["ew_offset"].notna()
     Chi2_ew = np.sum(
         (ew[ids] - df["ew_offset"][ids].to_numpy()) ** 2
         / df["ew_error"][ids].to_numpy() ** 2
     )
-    Chi = Chi2_ew + Chi2_ns
-    print(f"{fn}: (Chi2 Chi2_ew Chi2_ns) = {Chi} {Chi2_ew} {Chi2_ns}")
+    Chi2 = Chi2_ew + Chi2_ns
+    if len(args.fault) == 1:
+        print(f"sqrt_Chi2_offset_{event} {np.sqrt(Chi2)}")
+        print(f"sqrt_Chi2_offset_{event}_ew {np.sqrt(Chi2_ew)}")
+        print(f"sqrt_Chi2_offset_{event}_ns {np.sqrt(Chi2_ns)}")
+    else:
+        print(
+            f"{fn}: (sqrtChi2 sqrtChi2_ew sqrtChi2_ns) = {np.sqrt(Chi2)} {np.sqrt(Chi2_ew)} {np.sqrt(Chi2_ns)}"
+        )
 
 if args.event[0] == 2:
     ax.legend(frameon=False, loc="lower center", reverse=True, labelspacing=1.2)
@@ -214,11 +197,11 @@ if not os.path.exists("output"):
     os.makedirs("output")
 
 if args.event[0] == 2:
-    plt.text(.02, .95, 'W', ha='left', va='top', transform=ax.transAxes)
-    plt.text(.98, .95, 'E', ha='right', va='top', transform=ax.transAxes)
+    plt.text(0.02, 0.95, "W", ha="left", va="top", transform=ax.transAxes)
+    plt.text(0.98, 0.95, "E", ha="right", va="top", transform=ax.transAxes)
 else:
-    plt.text(.02, .95, 'SW', ha='left', va='top', transform=ax.transAxes)
-    plt.text(.98, .95, 'NE', ha='right', va='top', transform=ax.transAxes)
+    plt.text(0.02, 0.95, "SW", ha="left", va="top", transform=ax.transAxes)
+    plt.text(0.98, 0.95, "NE", ha="right", va="top", transform=ax.transAxes)
 
 fn = f"output/comparison_offset_{event}.svg"
 plt.savefig(fn, dpi=200, bbox_inches="tight")
