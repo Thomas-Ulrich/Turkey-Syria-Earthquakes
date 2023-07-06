@@ -13,9 +13,7 @@ FreqRatio=100
 /
 
 &Boundaries
-BC_fs = 1                                      ! enable free surface boundaries
 BC_dr = 1                                      ! enable fault boundaries
-BC_of = 1                                      ! enable absorbing boundaries
 /
   
 &DynamicRupture
@@ -33,7 +31,7 @@ XRef = -0.1                                    ! Reference point
 YRef = 0.0
 ZRef = -1.0
 refPointMethod = 1
-OutputPointType = 4                            ! Type (0: no output, 3: ascii file, 4: paraview file, 5: 3+4)
+OutputPointType = 5                            ! Type (0: no output, 3: ascii file, 4: paraview file, 5: 3+4)
 SlipRateOutputType=0
 /
 
@@ -62,37 +60,38 @@ PPFileName = 'mesh/Mw_78_Turkey_faultreceivers.dat'
 /
             
 &MeshNml
-MeshFile = 'mesh/Turkey_extended_6'
+MeshFile = 'mesh/Turkey78_75_dip70_3'
 meshgenerator = 'PUML'                         ! Name of meshgenerator (Gambit3D-fast, Netcdf or PUML)
 /
 
 &Discretization
-CFL = 0.4                                      ! CFL number (<=1.0)
+CFL = 0.5                                      ! CFL number (<=1.0)
 ClusteredLTS = 2                               ! 1 for Global time stepping, 2,3,5,... Local time stepping (advised value 2)
 !ClusteredLTS defines the multi-rate for the time steps of the clusters 2 for Local time stepping
 LtsWiggleFactorMin = 0.51                      ! Minimal wiggle factor applied to time step size. Should be > 1/rate
 LtsWiggleFactorStepsize = 0.08                 ! Stepsize for wiggle factor grid search
 LtsWiggleFactorEnforceMaximumDifference = 0    ! 0 or 1: Enforces the maximum difference between neighboring clusters during wiggle factor search
 LtsAutoMergeClusters = 1                       !  0 or 1: Activates auto merging of clusters
-LtsAllowedRelativePerformanceLossAutoMerge = 0.25 ! Find minimal max number of clusters such that new computational cost is at most increased by this factor
+LtsAllowedRelativePerformanceLossAutoMerge = 0.2 ! Find minimal max number of clusters such that new computational cost is at most increased by this factor
 LtsAutoMergeCostBaseline = 'bestWiggleFactor'
 /
 
 &Output
+!checkpoint=0
 FaultOutputFlag = 1                            ! DR output (add this line only if DR is active)
-OutputFile = 'output/Turkey_ext6_o6_ev2'
+!OutputFile = 'output/Turkey_31M_o5_el_ev1_s05'
+OutputFile = '/hppfs/scratch/0A/di73yeq4/output_el_Turkey_31/Turkey_31M_o5_el_ev2_2500_s2_05_al065_SCnew'
 Format = 6                                     ! Format (10= no output, 6=hdf5 output)
 !             |stress     |vel  
 iOutputMask = 0 0 0 0 0 0 1 1 1
 iPlasticityMask = 0 0 0 0 0 0 1
-printIntervalCriterion = 2                     ! Criterion for index of printed info: 1=timesteps,2=time,3=timesteps+time
-TimeInterval = 50.00                           ! Index of printed info at time
+TimeInterval = 150.00                           ! Index of printed info at time
 refinement = 0
 
 ! off-fault ascii receivers
-RFileName = 'mesh/Turkey_extended_6_stations_proj_5m.txt'    ! Record Points in extra file
+!RFileName = 'mesh/Turkey_extended_4_stations_proj_5m.txt'    ! Record Points in extra file
+RFileName = 'mesh/Turkey78_75_dip70_3_stations_proj.txt'    ! Record Points in extra file
 pickdt = 0.01                                  ! Pickpoint Sampling
-pickDtType = 1                                 ! Pickpoint Type
 ! (Optional) Synchronization point for receivers.
 !            If omitted, receivers are written at the end of the simulation.
 ReceiverOutputInterval = 1.0

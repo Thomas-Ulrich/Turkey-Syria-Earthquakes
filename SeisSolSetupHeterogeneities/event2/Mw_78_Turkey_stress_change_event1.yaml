@@ -1,31 +1,36 @@
 !EvalModel
-parameters: [c_xx, c_yy, c_zz, c_xy, c_yz, c_xz]
+parameters: [sigma_xx, sigma_yy, sigma_zz, sigma_xy, sigma_yz, sigma_xz]
 model: !Switch
-  [c_xx, c_yy, c_zz, c_xy, c_yz, c_xz]: !Any
+  [sigma_xx, sigma_yy, sigma_zz, sigma_xy, sigma_yz, sigma_xz]: !Any
      components: !Any
        - !ASAGI
-           file: ../asagi_file/StressChange_from_event1_ASAGI.nc
-           parameters: [c_xx, c_yy, c_zz, c_xy, c_yz, c_xz]
+           file: ../asagi_file/Turkey_31M_o5_el_ev1_2500_s2_05_al065_resampled_stress_change_fine.nc
+           parameters: [sigma_xx, sigma_yy, sigma_zz, sigma_xy, sigma_yz, sigma_xz]
+           var: data
+           interpolation: linear   
+       - !ASAGI
+           file: ../asagi_file/Turkey_31M_o5_el_ev1_2500_s2_05_al065_resampled_stress_change_coarse.nc
+           parameters: [sigma_xx, sigma_yy, sigma_zz, sigma_xy, sigma_yz, sigma_xz]
            var: data
            interpolation: linear   
        - !ConstantMap
          map:
-           c_xx: 0.0
-           c_yy: 0.0
-           c_zz: 0.0
-           c_xy: 0.0
-           c_yz: 0.0
-           c_xz: 0.0
+           sigma_xx: 0.0
+           sigma_yy: 0.0
+           sigma_zz: 0.0
+           sigma_xy: 0.0
+           sigma_yz: 0.0
+           sigma_xz: 0.0
 components: !LuaMap
   returns: [b1_xx, b1_yy, b1_zz, b1_xy, b1_yz, b1_xz]
   function: |
      function f (x)
       return {
-        b1_xx = x["c_xx"],
-        b1_yy = x["c_yy"],
-        b1_zz = x["c_zz"],
-        b1_xy = x["c_xy"],
-        b1_yz = x["c_yz"],
-        b1_xz = x["c_xz"]
+        b1_xx = x["sigma_xx"],
+        b1_yy = x["sigma_yy"],
+        b1_zz = x["sigma_zz"],
+        b1_xy = x["sigma_xy"],
+        b1_yz = x["sigma_yz"],
+        b1_xz = x["sigma_xz"]
       }
       end

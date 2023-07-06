@@ -3,7 +3,7 @@
   function: |
       function f (x)
         xha = {9199.57641228, 29894.97015349, -8600.}
-        r_crita = 2000.0
+        r_crita = 2500.0
         ra = math.sqrt((x["x"]-xha[1])^2 + (x["y"]-xha[2])^2 + (x["z"]-xha[3])^2 )
         Vs = 3464.0
         if (ra <= r_crita) then
