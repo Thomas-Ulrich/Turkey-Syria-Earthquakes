@@ -1,15 +1,15 @@
 import numpy as np
 
-ref_region_theta = np.radians(45)
+ref_region_theta = np.radians(0.)
 ct = np.cos(ref_region_theta)
 st = np.sin(ref_region_theta)
 u = np.array([ct, st])
 v = np.array([-st, ct])
-xc = np.array([20e3, 50e3])
+xc = np.array([50e3, 60e3])
 xyz = np.zeros((4, 3))
 ik = 0
 for i, j in [[1, 1], [-1, 1], [-1, -1], [1, -1]]:
-    xyz[ik, 0:2] = xc + i * 200e3 * u + j * 100e3 * v
+    xyz[ik, 0:2] = xc + i * 360e3 * u + j * 360e3 * v
     xyz[ik, 2] = 2e3
     ik = ik + 1
 

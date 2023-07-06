@@ -132,8 +132,16 @@ for type in ["obs", "syn"]:
         rup = quad_rupture.QuadRupture(gj, org)
 
         # Compute JB distances
-        df["dists"] = rup.computeRjb(stalats, stalons, stadeps)[0]
+        df["dists"] = rup.computeRjb(lon=stalons, lat=stalats, depth=stadeps)[0]
         df = df[df.dists < max_distance]
+        print('using minimum distance of 1.2')
+        df['dists'] = df['dists'].apply(lambda x: max(1.2, x))
+        if i==0:
+            clipped = ['0208', '0210', '0214', '0215', '2707', '2709',
+                       '3144', '4413', '4629', '4630', '4631', '7901']
+        else:
+            clipped = ['2304', '4001', '4209', '4408', '4631']
+        df = df[~df['codes'].isin(clipped)]
         dx = DistancesContext()
         dx.rjb = np.linspace(1, 1000, 1000)
 
@@ -204,7 +212,12 @@ for type in ["obs", "syn"]:
             zorder=10,
             label=label,
         )
-
+        """
+        # label each point
+        if type == "obs":
+            for dis, pg, code in zip(df.dists, obs, df.codes):
+                ax.text(max(1.5,dis), max(2e-3, pg), code, c=color, fontsize=5)
+        """
         # Plot data
         ax.scatter(
             df.dists,
@@ -279,31 +292,6 @@ for type in ["obs", "syn"]:
         if i == 0:
             ax.set_ylabel("ln(obs/pred)")
         ax.set_xlim(1, 1e3)
-
-        # Compute binned residuals
-        binmeans, residmeds, residstds = [], [], []
-        bins = np.logspace(0, 3, base=10, num=20)
-        for j in range(len(bins) - 1):
-            binmin = bins[j]
-            binmax = bins[j + 1]
-            binmean = (binmin + binmax) / 2
-            idx = (df.dists > binmin) & (df.dists < binmax)
-            inbin = resid[idx]
-            if len(inbin) > 3:
-                residmeds.append(inbin.mean())
-                residstds.append(inbin.std())
-                binmeans.append(binmean)
-        ax.plot(binmeans, residmeds, c=color)
-        ax.scatter(
-            binmeans,
-            residmeds,
-            edgecolors="k",
-            facecolors=color,
-            s=40,
-            linewidths=0.5,
-            marker=marker,
-            zorder=10,
-        )
         ax.tick_params(axis="both", which="major", labelsize=11)
         ax.text(0, 1.03, letter, transform=ax.transAxes)
 
@@ -312,10 +300,12 @@ axes1[0].legend(handles, labels, loc="lower left", fontsize=9)
 fig1.tight_layout()
 fig2.tight_layout()
 prefix = "pgv" if use_PGV else "pga"
+sadd =  "_obs_if_synthetics_available" if args.obs_if_synthetics_available else ""
+sadd += "_only_stations_both_events" if args.only_stations_both_events else ""
 ext = args.extension[0]
-fn = f"output/{prefix}_dist.{ext}"
+fn = f"output/{prefix}_dist{sadd}.{ext}"
 fig1.savefig(fn, bbox_inches="tight", dpi=300)
 print(f"done writing {fn}")
-fn = f"output/{prefix}_resid_dist.{ext}"
+fn = f"output/{prefix}_resid_dist_{sadd}.{ext}"
 fig2.savefig(fn, bbox_inches="tight", dpi=300)
 print(f"done writing {fn}")

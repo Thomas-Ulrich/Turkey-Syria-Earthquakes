@@ -28,7 +28,7 @@ parser.add_argument(
     nargs=1,
     help="1: mainshock, 2: aftershock, both: both",
     choices=["both", "1", "2"],
-    default="both",
+    default=["both"],
 )
 
 parser.add_argument(
@@ -68,10 +68,10 @@ dt = synth[1, 0]
 
 split = int(time_split / dt)
 
-if args.event == "both":
+if args.event[0] == "both":
     print(f"computing for both events, with time split {time_split}")
     levid = ["us6000jllz", "us6000jlqa"]
-elif args.event == "1":
+elif args.event[0] == "1":
     print(f"computing for mainshock only (whole simulation)")
     levid = ["us6000jllz"]
 else:
@@ -82,14 +82,16 @@ for evid in levid:
     df = pd.read_csv(asciiStationFile)
     # check is station is in refined area
     x, y = TRANSFORMER_INV.transform(df.lons, df.lats)
-    ref_region_theta = np.radians(45)
+
+    ref_region_theta = np.radians(0.)
     ct = np.cos(ref_region_theta)
     st = np.sin(ref_region_theta)
-    ref_region_xc = 20e3
-    ref_region_yc = 50e3
+    ref_region_xc = 50e3
+    ref_region_yc = 60e3
     df["u"] = (x - ref_region_xc) * ct + (y - ref_region_yc) * st
     df["v"] = (x - ref_region_xc) * -st + (y - ref_region_yc) * ct
-    df = df[(abs(df.u) < 200e3) & (abs(df.v) < 100e3)]
+    print('selecting only stations in refined area (frontera mesh)')
+    df = df[(abs(df.u) < 380e3) & (abs(df.v) < 380e3)]
     print(df)
 
     if args.event == "both":
