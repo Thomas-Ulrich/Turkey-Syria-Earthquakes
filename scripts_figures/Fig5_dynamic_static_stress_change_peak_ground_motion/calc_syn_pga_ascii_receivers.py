@@ -86,12 +86,23 @@ for evid in levid:
     ref_region_theta = np.radians(0.)
     ct = np.cos(ref_region_theta)
     st = np.sin(ref_region_theta)
-    ref_region_xc = 50e3
-    ref_region_yc = 60e3
+    mesh = '175M'
+    if mesh == '175M' or args.PGV:
+        ref_region_xc = 50e3
+        ref_region_yc = 60e3
+        hu = 380e3
+        hv = 380e3
+    elif mesh == '31M':
+        ref_region_xc = 20e3
+        ref_region_yc = 50e3
+        hu = 200e3
+        hv = 100e3
+    else:
+        raise NotImplementedError
     df["u"] = (x - ref_region_xc) * ct + (y - ref_region_yc) * st
     df["v"] = (x - ref_region_xc) * -st + (y - ref_region_yc) * ct
-    print('selecting only stations in refined area (frontera mesh)')
-    df = df[(abs(df.u) < 380e3) & (abs(df.v) < 380e3)]
+    print(f'selecting only stations in refined area ({mesh} mesh)')
+    df = df[(abs(df.u) < hu) & (abs(df.v) < hv)]
     print(df)
 
     if args.event == "both":

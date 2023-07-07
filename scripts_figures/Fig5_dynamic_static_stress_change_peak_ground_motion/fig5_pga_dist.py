@@ -190,6 +190,7 @@ for type in ["obs", "syn"]:
         # Compute binned medians
         binmeans, obsmeds = [], []
         bins = np.logspace(0, 3, base=10, num=20)
+        bins = bins[bins>5.0]
         for j in range(len(bins) - 1):
             binmin = bins[j]
             binmax = bins[j + 1]
@@ -242,7 +243,7 @@ for type in ["obs", "syn"]:
         if use_PGV:
             ax.set_ylim(2e-3, 1e1)
         else:
-            ax.set_ylim(2e-2, 2e2)
+            ax.set_ylim(2e-2, 5e2)
 
         ax.set_xlim(1, 1e3)
         ax.tick_params(axis="both", which="major", labelsize=11)
