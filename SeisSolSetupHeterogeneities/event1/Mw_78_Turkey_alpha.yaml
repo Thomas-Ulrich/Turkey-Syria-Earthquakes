@@ -14,4 +14,4 @@
        groups: [66,67,68,1]
        components: !ConstantMap
               map:
-                  alpha:  0.4 
+                  alpha:  0.65

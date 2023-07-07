@@ -3,7 +3,7 @@
   function: |
       function f (x)
         xhb = {20109.60910658,116253.58540175,-8628.}
-        r_critb = 3000.0
+        r_critb = 4000.0
         rb = math.sqrt((x["x"]-xhb[1])^2 + (x["y"]-xhb[2])^2 + (x["z"]-xhb[3])^2 )
         Vs = 3464.0
         if (rb <= r_critb) then

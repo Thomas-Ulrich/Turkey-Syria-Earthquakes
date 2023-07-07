@@ -4,7 +4,7 @@
       [c_xx, c_yy, c_zz, c_xy, c_yz, c_xz]: !Any
          components: !Any
            - !ASAGI
-               file: ../asagi_file/StressChange_filt_v5_joint_ASAGI.nc
+               file: ../asagi_file/StressChange_filt_v7_joint_ASAGI.nc
                parameters: [c_xx, c_yy, c_zz, c_xy, c_yz, c_xz]
                var: data
                interpolation: linear   
