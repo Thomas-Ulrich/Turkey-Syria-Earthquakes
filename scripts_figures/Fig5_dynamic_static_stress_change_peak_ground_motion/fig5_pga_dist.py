@@ -246,6 +246,7 @@ for type in ["obs", "syn"]:
             ax.set_ylim(2e-2, 5e2)
 
         ax.set_xlim(1, 1e3)
+
         ax.tick_params(axis="both", which="major", labelsize=11)
 
         if i == 0:
@@ -293,6 +294,35 @@ for type in ["obs", "syn"]:
         if i == 0:
             ax.set_ylabel("ln(obs/pred)")
         ax.set_xlim(1, 1e3)
+
+        # Compute binned residuals
+        binmeans, residmeds, residstds = [], [], []
+        bins = np.logspace(0, 3, base=10, num=20)
+
+        for j in range(len(bins) - 1):
+            binmin = bins[j]
+            binmax = bins[j + 1]
+            binmean = (binmin + binmax) / 2
+            idx = (df.dists > binmin) & (df.dists < binmax)
+            inbin = resid[idx]
+            if len(inbin) > 3:
+                residmeds.append(inbin.mean())
+                residstds.append(inbin.std())
+                binmeans.append(binmean)
+        #we manually remove the first bin
+        ax.plot(binmeans[1:], residmeds[1:], c=color)
+
+        ax.scatter(
+            binmeans[1:],
+            residmeds[1:],
+            edgecolors="k",
+            facecolors=color,
+            s=40,
+            linewidths=0.5,
+            marker=marker,
+            zorder=10,
+        )
+
         ax.tick_params(axis="both", which="major", labelsize=11)
         ax.text(0, 1.03, letter, transform=ax.transAxes)
 
