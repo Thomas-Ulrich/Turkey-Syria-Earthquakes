@@ -4,12 +4,12 @@ model: !Switch
   [sigma_xx, sigma_yy, sigma_zz, sigma_xy, sigma_yz, sigma_xz]: !Any
      components: !Any
        - !ASAGI
-           file: ../asagi_file/Turkey_31M_o5_el_ev1_2500_s2_05_al065_resampled_stress_change_fine.nc
+           file: ../asagi_file/Turkey_31M_o5_el_ev1_2500_s2_05_al065_R056_resampled_stress_change_fine.nc
            parameters: [sigma_xx, sigma_yy, sigma_zz, sigma_xy, sigma_yz, sigma_xz]
            var: data
            interpolation: linear   
        - !ASAGI
-           file: ../asagi_file/Turkey_31M_o5_el_ev1_2500_s2_05_al065_resampled_stress_change_coarse.nc
+           file: ../asagi_file/Turkey_31M_o5_el_ev1_2500_s2_05_al065_R056_resampled_stress_change_coarse.nc
            parameters: [sigma_xx, sigma_yy, sigma_zz, sigma_xy, sigma_yz, sigma_xz]
            var: data
            interpolation: linear   

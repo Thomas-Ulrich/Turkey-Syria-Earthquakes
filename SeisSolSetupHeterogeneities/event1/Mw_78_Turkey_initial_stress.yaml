@@ -103,7 +103,7 @@ model: !Switch
                   if x1 > 60e3 then
                     -- this is roughly the region of the main aftershock
                     aX =  {-1e10, 80e3, 115e3, 140e3, 175e3, 1e10}
-                    aData = {0.6,   0.6,     0.6,    0.4,  0.45, 0.45}
+                    aData = {0.56,   0.56,     0.56,    0.4,  0.45, 0.45}
                   else
                     -- this is roughly the region of the mainshock
                     aX =  {-1e10, -95e3 ,-85e3, -25e3, 35e3, 80e3, 115e3, 175e3, 1e10}

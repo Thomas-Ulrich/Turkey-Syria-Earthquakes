@@ -80,7 +80,7 @@ LtsAutoMergeCostBaseline = 'bestWiggleFactor'
 !checkpoint=0
 FaultOutputFlag = 1                            ! DR output (add this line only if DR is active)
 !OutputFile = 'output/Turkey_31M_o5_el_ev1_s05'
-OutputFile = '/hppfs/scratch/0A/di73yeq4/output_el_Turkey_31/Turkey_31M_o5_el_ev2_2500_s2_05_al065_SCnew'
+OutputFile = '/hppfs/scratch/0A/di73yeq4/output_el_Turkey_31/Turkey_31M_o5_el_ev2_2500_s2_05_al065_R056_SCnew'
 Format = 6                                     ! Format (10= no output, 6=hdf5 output)
 !             |stress     |vel  
 iOutputMask = 0 0 0 0 0 0 1 1 1
