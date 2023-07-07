@@ -103,11 +103,11 @@ model: !Switch
                   if x1 > 60e3 then
                     -- this is roughly the region of the main aftershock
                     aX =  {-1e10, 80e3, 115e3, 140e3, 175e3, 1e10}
-                    aData = {0.65,   0.65,     0.65,    0.65,  0.4, 0.4}
+                    aData = {0.56,   0.56,     0.56,    0.4,  0.45, 0.45}
                   else
                     -- this is roughly the region of the mainshock
                     aX =  {-1e10, -95e3 ,-85e3, -25e3, 35e3, 80e3, 115e3, 175e3, 1e10}
-                    aData = {0.30,0.30, 0.40, 0.450, 0.450, 0.450, 0.43, 0.35,  0.35}
+                    aData = {0.2,0.2, 0.2, 0.3, 0.3, 0.3, 0.3, 0.3,  0.3}
                   end
                   -- this implements a linear interpolation
                   if (aX[1] > xi) or ( xi>aX[#aX] ) then
@@ -130,7 +130,7 @@ model: !Switch
         mu_d:      0.2
         mu_s:      0.6
         cohesion:  0.0
-        s2ratio: 0.75
+        s2ratio: 0.5
         S_v: 2
   [sig_zz]: !Include Mw_78_Turkey_sig_zz.yaml
   [bc_xx, bc_yy, bc_zz,bc_xy, bc_yz, bc_xz]: !Include Mw_78_Turkey_stress_change.yaml  
