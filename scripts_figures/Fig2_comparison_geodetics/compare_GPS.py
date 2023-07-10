@@ -129,9 +129,10 @@ parser.add_argument("--surface", nargs=1, help="SeisSol xdmf surface file")
 parser.add_argument(
     "--event",
     nargs=1,
-    default=(["1"]),
+    default=([1]),
     help="Plot gps comparison for the Mw 7.8 (1) or for the Mw 7.7 events (2)",
-    choices=["1", "2"],
+    choices=[1, 2],
+    type = int
 )
 
 parser.add_argument(
@@ -146,7 +147,7 @@ arg = parser.parse_args()
 
 print(f"Plot {arg.component[0]} GPS comparison for event {arg.event[0]}")
 
-event = np.int64(arg.event[0])
+event = arg.event[0]
 
 # Read GPS data
 gps = "../../ThirdParty/gps_turkey_sequence.csv"
@@ -157,6 +158,17 @@ lons, lats, lonlat_barycenter, connect, U, V, W = read_seissol_surface_data(
     arg.surface[0], event
 )
 ui, vi, wi = interpolate_seissol_surf_output(lonlat_barycenter, U, df)
+
+# Compute RMS
+def nanrms(x, axis=None):
+    return np.sqrt(np.nanmean(x**2, axis=axis))
+
+rms1 = nanrms(ui - ew)
+rms2 = nanrms(vi - ns)
+rms3 = nanrms(wi - dz)
+
+rmstot = np.sqrt(rms1**2 + rms2**2 + rms3**2)
+print(f'RMS GPS:{rmstot:.5f}m')
 
 if event == 1:
     # data
@@ -267,17 +279,6 @@ ax[0].text(
     horizontalalignment="right",
     verticalalignment="center",
 )
-
-# Compute RMS
-def nanrms(x, axis=None):
-    return np.sqrt(np.nanmean(x**2, axis=axis))
-
-rms1 = nanrms(ui - ew)
-rms2 = nanrms(vi - ns)
-rms3 = nanrms(wi - dz)
-
-rmstot = np.sqrt(rms1**2 + rms2**2 + rms3**2)
-print('RMS GPS:',np.round(rmstot,5),'m')
 
 # Write .png file
 fn = f"output/comp_GPS_event_{event}_comp_{arg.component[0]}.png"

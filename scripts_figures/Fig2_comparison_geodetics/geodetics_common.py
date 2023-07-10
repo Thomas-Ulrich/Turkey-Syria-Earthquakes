@@ -20,7 +20,14 @@ def read_observation_data_one_band(fn, downsampling):
         ew = ew[::ds, ::ds]
         return lon_g, lat_g, ew
 
-
+def compute_triangle_area(xdmfFilename):
+    sx = seissolxdmf.seissolxdmf(xdmfFilename)
+    geom = sx.ReadGeometry()
+    connect = sx.ReadConnect()
+    side1 = geom[connect[:, 1], :] - geom[connect[:, 0], :]
+    side2 = geom[connect[:, 2], :] - geom[connect[:, 0], :]
+    return np.linalg.norm(np.cross(side1, side2), axis=1) / 2
+    
 def read_seissol_surface_data(xdmfFilename):
     """read unstructured free surface output and associated data.
     compute cell_barycenter"""
@@ -121,3 +128,8 @@ def compute_LOS_displacement_SeisSol_data_from_LOS_vector(
 
 def nanrms(x, axis=None):
     return np.sqrt(np.nanmean(x**2, axis=axis))
+
+def nanrms_weighted(x, areas,  axis=None):
+    areas[np.isnan(x)] = np.nan
+    sum_area = np.nansum(areas)
+    return np.sqrt(np.nansum(areas * x**2, axis=axis)/sum_area)

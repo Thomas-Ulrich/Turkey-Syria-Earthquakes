@@ -63,7 +63,7 @@ if args.surface:
             V,
             W,
         )
-
+    areas = compute_triangle_area(args.surface[0])
     # interpolate satellite displacement on the unstructured grid
     obs_inter = RGIinterp(lon_g, lat_g, obs_to_plot, lonlat_barycenter)
-    print(args.band[0], nanrms(syn_to_plot - obs_inter))
+    print(args.band[0], nanrms_weighted(syn_to_plot - obs_inter, areas))
