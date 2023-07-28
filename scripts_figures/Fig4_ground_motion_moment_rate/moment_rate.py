@@ -13,11 +13,12 @@ def computeMw(label, time, moment_rate):
     return Mw
 
 
-ps = 12
+ps = 8
 matplotlib.rcParams.update({"font.size": ps})
 plt.rcParams["font.family"] = "sans"
 matplotlib.rc("xtick", labelsize=ps)
 matplotlib.rc("ytick", labelsize=ps)
+matplotlib.rcParams['lines.linewidth'] = 0.5
 
 
 parser = argparse.ArgumentParser(description="plot moment rate comparison")
@@ -37,7 +38,7 @@ if not os.path.exists("output"):
 fig = []
 ax = []
 for j, event in enumerate(["mainshock", "second_event"]):
-    fig.append(plt.figure(figsize=(7.5, 7.5 * 8.0 / 16), dpi=80))
+    fig.append(plt.figure(figsize=(0.5*7.5, 0.3*7.5 * 8.0 / 16), dpi=80))
     ax.append(fig[j].add_subplot(111))
 
 cols_mainshock = ["m", "b", "g", "y"]
@@ -123,5 +124,5 @@ for j, event in enumerate(["mainshock", "second_event"]):
     ax[j].set_xlabel("time (s)")
 
     fn = f"output/moment_rate_{event}.svg"
-    fig[j].savefig(fn, bbox_inches="tight")
+    fig[j].savefig(fn, bbox_inches="tight", transparent=True)
     print(f"done write {fn}")
