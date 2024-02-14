@@ -346,6 +346,8 @@ def PlotSpectraComparisonStationXYZ(station, lTrace, lColors, fplotname, smooth=
         WB = np.zeros((Nfsmooth, freq.shape[0]))
         for j in range(Nfsmooth):
             WB[j] = np.power(np.sinc(20.0 * np.log10(np.abs(freq) / freqaxis[j])), 4)
+        for j in range(Nfsmooth):
+            WB[j] /= np.sum(WB[j])
 
     for j, ax in enumerate([ax1, ax2, ax3]):
         for it, myTrace in enumerate(lTrace):
