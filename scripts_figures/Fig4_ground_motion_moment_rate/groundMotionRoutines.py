@@ -317,10 +317,11 @@ def PlotSpectrograms(
         plt.close()
 
 
-def PlotSpectraComparisonStationXYZ(station, lTrace, lColors, fplotname):
+def PlotSpectraComparisonStationXYZ(station, lTrace, lColors, fplotname, smooth=False):
     # Compare for a station observation and simulation on the same figure (3 components)
     fig0, (ax1, ax2, ax3) = plt.subplots(1, 3, sharex=True, sharey=True)
     xyz = "xyz"
+
     for j, ax in enumerate([ax1, ax2, ax3]):
         # Compare signal on the same time segment
         tmin, tmax = -1e10, 1e10
@@ -331,6 +332,22 @@ def PlotSpectraComparisonStationXYZ(station, lTrace, lColors, fplotname):
         t0 = 0.5 * (tmax - tmin)
         t1 = 0.5 * (tmax + tmin)
 
+    if smooth:
+        Nfsmooth = 100
+        flo = 0.01
+        fro = 10
+        freqaxis = np.logspace(np.log10(flo), np.log10(fro), num=Nfsmooth)
+        t = lTrace[0][0].times()
+        ids = np.where(abs(t - t1) < t0)[0]
+        t = t[ids]
+
+        freq = np.fft.fftfreq(n=t.shape[-1], d=t[1] - t[0])
+        freq[0] = freq[1]
+        WB = np.zeros((Nfsmooth, freq.shape[0]))
+        for j in range(Nfsmooth):
+            WB[j] = np.power(np.sinc(20.0 * np.log10(np.abs(freq) / freqaxis[j])), 4)
+
+    for j, ax in enumerate([ax1, ax2, ax3]):
         for it, myTrace in enumerate(lTrace):
             t = myTrace[j].times()
             ids = np.where(abs(t - t1) < t0)[0]
@@ -338,8 +355,14 @@ def PlotSpectraComparisonStationXYZ(station, lTrace, lColors, fplotname):
             cosinetapperS = ComputeCosineTapper(t)
             sp = np.fft.fft(myTrace[j].data[ids] * cosinetapperS)
             freq = np.fft.fftfreq(n=t.shape[-1], d=t[1] - t[0])
-            nf = np.shape(freq)[0] // 2
-            ax.loglog(freq[0:nf], np.abs(sp)[0:nf], lColors[it])
+            if not smooth:
+                nf = np.shape(freq)[0] // 2
+                ax.loglog(freq[0:nf], np.abs(sp)[0:nf], lColors[it])
+            else:
+                smoothed_spectra = np.zeros((Nfsmooth,))
+                for k in range(Nfsmooth):
+                    smoothed_spectra[k] = np.abs(np.sum(WB[k, :] * sp[:]))
+                ax.loglog(freqaxis, smoothed_spectra, lColors[it])
 
     for j, ax in enumerate([ax1, ax2, ax3]):
         ax.set_ylim(bottom=1e-5)
